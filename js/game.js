@@ -1,4 +1,3 @@
-document.body.innerHTML += "<h2>GAME.JS IS RUNNING</h2>";
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
