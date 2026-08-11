@@ -3,10 +3,10 @@ import * as THREE from
 
 const scene = new THREE.Scene();
 
-scene.background = new THREE.Color(0x10182b);
+scene.background = new THREE.Color(0x87ceeb);
 
 const camera = new THREE.PerspectiveCamera(
-    70,
+    75,
     window.innerWidth / window.innerHeight,
     0.1,
     1000
@@ -28,19 +28,19 @@ document.body.appendChild(renderer.domElement);
 
 // LIGHT
 
-const sunlight = new THREE.DirectionalLight(
+const light = new THREE.DirectionalLight(
     0xffffff,
     2
 );
 
-sunlight.position.set(20, 30, 20);
+light.position.set(10, 20, 10);
 
-scene.add(sunlight);
+scene.add(light);
 
 scene.add(
     new THREE.AmbientLight(
         0xffffff,
-        0.6
+        0.5
     )
 );
 
@@ -48,116 +48,56 @@ scene.add(
 // GROUND
 
 const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(200, 200),
-
+    new THREE.BoxGeometry(50, 1, 50),
     new THREE.MeshStandardMaterial({
-        color: 0x333333
+        color: 0x444444
     })
 );
 
-ground.rotation.x = -Math.PI / 2;
+ground.position.y = -0.5;
 
 scene.add(ground);
 
 
-// PLAYER
+// LOGAN
 
-const player = new THREE.Mesh(
+const logan = new THREE.Mesh(
     new THREE.BoxGeometry(1, 2, 1),
-
     new THREE.MeshStandardMaterial({
-        color: 0x2878ff
+        color: 0x2266ff
     })
 );
 
-player.position.y = 1;
+logan.position.y = 1;
 
-scene.add(player);
+scene.add(logan);
 
 
-// KEYBOARD
+// CITY BUILDING
 
-const keys = {};
-
-window.addEventListener(
-    "keydown",
-    (event) => {
-
-        keys[event.key.toLowerCase()] = true;
-
-        if (event.code === "Space") {
-            player.position.y += 2;
-        }
-
-        if (event.key.toLowerCase() === "b") {
-
-            if (player.material.color.getHex() === 0x2878ff) {
-
-                player.material.color.set(0xc62828);
-
-                document.getElementById(
-                    "mode"
-                ).textContent =
-                    "SECRET HERO MODE";
-
-            } else {
-
-                player.material.color.set(0x2878ff);
-
-                document.getElementById(
-                    "mode"
-                ).textContent =
-                    "CIVILIAN";
-            }
-        }
-    }
+const building = new THREE.Mesh(
+    new THREE.BoxGeometry(5, 8, 5),
+    new THREE.MeshStandardMaterial({
+        color: 0x888888
+    })
 );
 
-
-window.addEventListener(
-    "keyup",
-    (event) => {
-
-        keys[event.key.toLowerCase()] = false;
-    }
+building.position.set(
+    0,
+    4,
+    -10
 );
 
+scene.add(building);
 
-// GAME LOOP
+
+// ANIMATION
 
 function animate() {
 
     requestAnimationFrame(animate);
 
-    const speed = keys.shift
-        ? 0.25
-        : 0.12;
-
-    if (keys.w)
-        player.position.z -= speed;
-
-    if (keys.s)
-        player.position.z += speed;
-
-    if (keys.a)
-        player.position.x -= speed;
-
-    if (keys.d)
-        player.position.x += speed;
-
-
-    // Camera follows Logan
-
-    camera.position.x =
-        player.position.x;
-
-    camera.position.z =
-        player.position.z + 10;
-
-    camera.lookAt(
-        player.position
-    );
-
+    camera.lookAt(logan.position);
 
     renderer.render(
         scene,
@@ -168,7 +108,7 @@ function animate() {
 animate();
 
 
-// SCREEN RESIZE
+// RESIZE
 
 window.addEventListener(
     "resize",
