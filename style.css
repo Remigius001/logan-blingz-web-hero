@@ -1,0 +1,66 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background: black;
+    font-family: Arial, sans-serif;
+}
+
+canvas {
+    display: block;
+}
+
+#hud {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    color: white;
+    z-index: 10;
+    text-shadow: 2px 2px 5px black;
+}
+
+#hud h1 {
+    margin: 0 0 10px;
+}
+
+#health,
+#energy,
+#mission {
+    margin-top: 8px;
+}
+
+#controls {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    padding: 15px;
+    color: white;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    z-index: 10;
+    line-height: 1.6;
+}
+
+#phone {
+    display: none;
+    position: fixed;
+    right: 30px;
+    top: 60px;
+    width: 260px;
+    padding: 20px;
+    color: white;
+    background: #151515;
+    border-radius: 15px;
+    z-index: 20;
+}
+
+#phone button {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    cursor: pointer;
+}
+
+#messages {
+    margin-top: 15px;
+    line-height: 1.5;
+}
