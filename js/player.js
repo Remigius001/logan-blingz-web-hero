@@ -1,11 +1,10 @@
-import * as THREE from "three";
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js";
 
 export class Player {
 
     constructor(scene) {
 
-        this.scene = scene;
         this.group = new THREE.Group();
 
         this.speed = 0.12;
@@ -16,28 +15,53 @@ export class Player {
         this.jumpPower = 0.35;
         this.isGrounded = true;
 
-        this.model = null;
-        this.mixer = null;
-
         scene.add(this.group);
 
+        this.createFallback();
         this.loadModel();
+    }
+
+    createFallback() {
+
+        const body = new THREE.Mesh(
+            new THREE.BoxGeometry(1, 1.5, 0.6),
+            new THREE.MeshStandardMaterial({
+                color: 0x2255cc
+            })
+        );
+
+        body.position.y = 2;
+
+        const head = new THREE.Mesh(
+            new THREE.SphereGeometry(0.45, 24, 24),
+            new THREE.MeshStandardMaterial({
+                color: 0xffc79c
+            })
+        );
+
+        head.position.y = 3.1;
+
+        this.fallback = new THREE.Group();
+
+        this.fallback.add(body);
+        this.fallback.add(head);
+
+        this.group.add(this.fallback);
     }
 
     loadModel() {
 
         const loader = new GLTFLoader();
 
+        const modelPath =
+            "./assets/logan_blingz_original (3).glb";
+
         loader.load(
-            "./assets/logan_blingz_original (3).glb",
+            modelPath,
 
             (gltf) => {
 
-                console.log("Logan GLB loaded!");
-
                 const model = gltf.scene;
-
-                this.model = model;
 
                 model.scale.set(
                     0.8,
@@ -45,36 +69,23 @@ export class Player {
                     0.8
                 );
 
-                model.position.set(
-                    0,
-                    0,
-                    0
-                );
-
                 model.traverse((object) => {
 
                     if (object.isMesh) {
-
                         object.visible = true;
-                        object.castShadow = true;
-                        object.receiveShadow = true;
                     }
+
                 });
 
                 this.group.add(model);
 
-                if (gltf.animations.length > 0) {
+                this.fallback.visible = false;
 
-                    this.mixer =
-                        new THREE.AnimationMixer(model);
+                this.model = model;
 
-                    const action =
-                        this.mixer.clipAction(
-                            gltf.animations[0]
-                        );
-
-                    action.play();
-                }
+                console.log(
+                    "LOGAN MODEL LOADED"
+                );
             },
 
             undefined,
@@ -82,14 +93,17 @@ export class Player {
             (error) => {
 
                 console.error(
-                    "Logan GLB error:",
+                    "LOGAN MODEL COULD NOT LOAD:",
                     error
                 );
+
+                // Keep the fallback character visible
+                this.fallback.visible = true;
             }
         );
     }
 
-    update(keys, delta = 0.016) {
+    update(keys) {
 
         let speed = this.speed;
 
@@ -128,10 +142,6 @@ export class Player {
             this.group.position.y = 0;
             this.velocityY = 0;
             this.isGrounded = true;
-        }
-
-        if (this.mixer) {
-            this.mixer.update(delta);
         }
     }
 }
