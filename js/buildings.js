@@ -3,17 +3,18 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.m
 export function createBuildings(scene) {
 
     const buildingMaterials = [
-        new THREE.MeshStandardMaterial({ color: 0x777777 }),
-        new THREE.MeshStandardMaterial({ color: 0x555555 }),
-        new THREE.MeshStandardMaterial({ color: 0x888888 }),
-        new THREE.MeshStandardMaterial({ color: 0x666666 })
+        new THREE.MeshStandardMaterial({ color: 0xb0b0b0 }),
+        new THREE.MeshStandardMaterial({ color: 0xcccccc }),
+        new THREE.MeshStandardMaterial({ color: 0x999999 }),
+        new THREE.MeshStandardMaterial({ color: 0xd0c0a0 }),
+        new THREE.MeshStandardMaterial({ color: 0x8fb3c9 })
     ];
 
     for (let x = -80; x <= 80; x += 25) {
 
         for (let z = -80; z <= 80; z += 25) {
 
-            // Leave the main roads open
+            // Keep the roads clear
 
             if (
                 Math.abs(x) < 15 ||
@@ -53,6 +54,46 @@ export function createBuildings(scene) {
             );
 
             scene.add(building);
+
+            // ==========================
+            // WINDOWS
+            // ==========================
+
+            const windowMaterial =
+                new THREE.MeshBasicMaterial({
+                    color: 0xffff99
+                });
+
+            for (
+                let y = 4;
+                y < height - 2;
+                y += 4
+            ) {
+
+                for (
+                    let side = -1;
+                    side <= 1;
+                    side += 2
+                ) {
+
+                    const window = new THREE.Mesh(
+                        new THREE.BoxGeometry(
+                            1.2,
+                            1.5,
+                            0.1
+                        ),
+                        windowMaterial
+                    );
+
+                    window.position.set(
+                        x + side * (width / 2 + 0.06),
+                        y,
+                        z
+                    );
+
+                    scene.add(window);
+                }
+            }
         }
     }
 }
