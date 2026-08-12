@@ -1,7 +1,11 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     overflow: hidden;
-    background: black;
+    background: #050510;
     font-family: Arial, sans-serif;
 }
 
@@ -9,13 +13,41 @@ canvas {
     display: block;
 }
 
-#title {
+#hud {
     position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 18px;
     color: white;
-    font-size: 40px;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#gameTitle {
+    font-size: 28px;
     font-weight: bold;
+    text-shadow: 0 0 12px #00c8ff;
+}
+
+#health {
+    margin-top: 10px;
+    font-size: 20px;
+}
+
+#mission {
+    margin-top: 8px;
+    font-size: 17px;
+}
+
+#instructions {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    padding: 12px;
+    color: white;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 8px;
+    line-height: 1.6;
     z-index: 10;
 }
