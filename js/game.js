@@ -11,36 +11,28 @@ import { Vehicle } from "./vehicles.js";
 
 const scene = new THREE.Scene();
 
-scene.background =
-    new THREE.Color(0x87ceeb);
+scene.background = new THREE.Color(0x87ceeb);
 
 // ======================================
 // CAMERA
 // ======================================
 
-const camera =
-    new THREE.PerspectiveCamera(
-        70,
-        window.innerWidth /
-        window.innerHeight,
-        0.1,
-        1000
-    );
-
-camera.position.set(
-    0,
-    5,
-    10
+const camera = new THREE.PerspectiveCamera(
+    70,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
 );
+
+camera.position.set(0, 5, 10);
 
 // ======================================
 // RENDERER
 // ======================================
 
-const renderer =
-    new THREE.WebGLRenderer({
-        antialias: true
-    });
+const renderer = new THREE.WebGLRenderer({
+    antialias: true
+});
 
 renderer.setSize(
     window.innerWidth,
@@ -48,38 +40,28 @@ renderer.setSize(
 );
 
 renderer.setPixelRatio(
-    Math.min(
-        window.devicePixelRatio,
-        2
-    )
+    Math.min(window.devicePixelRatio, 2)
 );
 
-document.body.appendChild(
-    renderer.domElement
-);
+document.body.appendChild(renderer.domElement);
 
 // ======================================
-// LIGHTING
+// LIGHTS
 // ======================================
 
-const sunlight =
-    new THREE.DirectionalLight(
-        0xffffff,
-        3
-    );
-
-sunlight.position.set(
-    10,
-    20,
-    10
+const sunlight = new THREE.DirectionalLight(
+    0xffffff,
+    4
 );
+
+sunlight.position.set(10, 20, 10);
 
 scene.add(sunlight);
 
 scene.add(
     new THREE.AmbientLight(
         0xffffff,
-        1
+        1.5
     )
 );
 
@@ -93,102 +75,79 @@ createCity(scene);
 // PLAYER
 // ======================================
 
-const player =
-    new Player(scene);
+const player = new Player(scene);
 
 // ======================================
 // NPCS
 // ======================================
 
-const npcs =
-    createNPCs(scene);
+const npcs = createNPCs(scene);
 
 // ======================================
-// VEHICLE
+// CAR
 // ======================================
 
-const car =
-    new Vehicle(
-        scene,
-        8,
-        0
-    );
+// Put the car right beside Logan
+const car = new Vehicle(
+    scene,
+    3,
+    0
+);
+
+// Make sure it is visible
+car.group.visible = true;
 
 // ======================================
-// KEYBOARD
+// CONTROLS
 // ======================================
 
 const keys = {};
 
-window.addEventListener(
-    "keydown",
-    (event) => {
+window.addEventListener("keydown", (event) => {
 
-        keys[
-            event.key.toLowerCase()
-        ] = true;
+    keys[event.key.toLowerCase()] = true;
 
-        // E = enter / exit car
+    // Enter / exit vehicle
+    if (event.key.toLowerCase() === "e") {
+
+        const distance =
+            player.group.position.distanceTo(
+                car.group.position
+            );
 
         if (
-            event.key.toLowerCase()
-            === "e"
+            distance < 6 &&
+            !car.isOccupied
         ) {
 
-            const distance =
-                player.group.position
-                    .distanceTo(
-                        car.group.position
-                    );
+            car.enter();
 
-            if (
-                distance < 5 &&
-                !car.isOccupied
-            ) {
+            player.group.visible = false;
 
-                car.enter();
+            console.log("Logan entered car");
 
-                player.group.visible =
-                    false;
+        } else if (car.isOccupied) {
 
-                console.log(
-                    "Logan entered the car"
-                );
+            car.exit();
 
-            } else if (
-                car.isOccupied
-            ) {
+            player.group.visible = true;
 
-                car.exit();
+            player.group.position.copy(
+                car.group.position
+            );
 
-                player.group.visible =
-                    true;
+            player.group.position.x += 3;
 
-                player.group.position.copy(
-                    car.group.position
-                );
-
-                player.group.position.x +=
-                    2;
-
-                console.log(
-                    "Logan exited the car"
-                );
-            }
+            console.log("Logan exited car");
         }
     }
-);
+});
 
-window.addEventListener(
-    "keyup",
-    (event) => {
+window.addEventListener("keyup", (event) => {
 
-        keys[
-            event.key.toLowerCase()
-        ] = false;
+    keys[event.key.toLowerCase()] = false;
 
-    }
-);
+});
 
 // ======================================
 // NPC MOVEMENT
@@ -199,20 +158,14 @@ function updateNPCs() {
     for (const npc of npcs) {
 
         npc.object.position.x +=
-            Math.cos(
-                npc.direction
-            ) *
+            Math.cos(npc.direction) *
             npc.speed;
 
         npc.object.position.z +=
-            Math.sin(
-                npc.direction
-            ) *
+            Math.sin(npc.direction) *
             npc.speed;
 
-        if (
-            Math.random() < 0.002
-        ) {
+        if (Math.random() < 0.002) {
 
             npc.direction =
                 Math.random() *
@@ -228,18 +181,17 @@ function updateNPCs() {
 
 function animate() {
 
-    requestAnimationFrame(
-        animate
-    );
+    requestAnimationFrame(animate);
 
+    // Logan
     if (!car.isOccupied) {
-
         player.update(keys);
-
     }
 
+    // NPCs
     updateNPCs();
 
+    // Car
     car.update(keys);
 
     // ==================================
@@ -258,7 +210,9 @@ function animate() {
             car.group.position.z + 10;
 
         camera.lookAt(
-            car.group.position
+            car.group.position.x,
+            car.group.position.y + 1,
+            car.group.position.z
         );
 
     } else {
@@ -295,19 +249,16 @@ animate();
 // RESIZE
 // ======================================
 
-window.addEventListener(
-    "resize",
-    () => {
+window.addEventListener("resize", () => {
 
-        camera.aspect =
-            window.innerWidth /
-            window.innerHeight;
+    camera.aspect =
+        window.innerWidth /
+        window.innerHeight;
 
-        camera.updateProjectionMatrix();
+    camera.updateProjectionMatrix();
 
-        renderer.setSize(
-            window.innerWidth,
-            window.innerHeight
-        );
-    }
-);
+    renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+    );
+});
