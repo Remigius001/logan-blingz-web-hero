@@ -1,7 +1,5 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
-document.body.innerHTML = "";
-
 const scene = new THREE.Scene();
 
 scene.background = new THREE.Color(0x87ceeb);
@@ -51,17 +49,3 @@ function animate() {
 }
 
 animate();
-
-window.addEventListener("resize", () => {
-
-    camera.aspect =
-        window.innerWidth /
-        window.innerHeight;
-
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(
-        window.innerWidth,
-        window.innerHeight
-    );
-});
