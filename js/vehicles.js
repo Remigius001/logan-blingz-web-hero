@@ -14,17 +14,19 @@ export class Vehicle {
 
         this.isOccupied = false;
 
+        this.weaponCooldown = 0;
+
         this.createVehicle();
 
-        this.group.position.set(
-            x,
-            0,
-            z
-        );
+        this.group.position.set(x, 0, z);
+
+        // Start the jet high above the city
+        if (this.type === "jet") {
+            this.group.position.y = 30;
+        }
 
         scene.add(this.group);
     }
-
 
     createVehicle() {
 
@@ -32,15 +34,14 @@ export class Vehicle {
             this.createCar();
         }
 
-        else if (this.type === "bike") {
+        if (this.type === "bike") {
             this.createBike();
         }
 
-        else if (this.type === "jet") {
+        if (this.type === "jet") {
             this.createJet();
         }
     }
-
 
     // ======================================
     // CAR
@@ -49,55 +50,38 @@ export class Vehicle {
     createCar() {
 
         const body = new THREE.Mesh(
-            new THREE.BoxGeometry(
-                2.5,
-                0.7,
-                4.2
-            ),
+            new THREE.BoxGeometry(2.5, 0.7, 4.2),
             new THREE.MeshStandardMaterial({
                 color: 0xd72626
             })
         );
 
         body.position.y = 0.8;
-
         this.group.add(body);
 
-
         const roof = new THREE.Mesh(
-            new THREE.BoxGeometry(
-                1.7,
-                0.7,
-                2.0
-            ),
+            new THREE.BoxGeometry(1.7, 0.7, 2),
             new THREE.MeshStandardMaterial({
                 color: 0x202020
             })
         );
 
         roof.position.y = 1.35;
-
         this.group.add(roof);
-
 
         const wheelMaterial =
             new THREE.MeshStandardMaterial({
                 color: 0x111111
             });
 
-
         const wheelPositions = [
-
             [-1.15, 0.4, -1.35],
-            [ 1.15, 0.4, -1.35],
-
-            [-1.15, 0.4,  1.35],
-            [ 1.15, 0.4,  1.35]
-
+            [1.15, 0.4, -1.35],
+            [-1.15, 0.4, 1.35],
+            [1.15, 0.4, 1.35]
         ];
 
-
-        for (const position of wheelPositions) {
+        for (const p of wheelPositions) {
 
             const wheel = new THREE.Mesh(
                 new THREE.CylinderGeometry(
@@ -109,19 +93,42 @@ export class Vehicle {
                 wheelMaterial
             );
 
-            wheel.rotation.z =
-                Math.PI / 2;
+            wheel.rotation.z = Math.PI / 2;
 
             wheel.position.set(
-                position[0],
-                position[1],
-                position[2]
+                p[0],
+                p[1],
+                p[2]
             );
 
             this.group.add(wheel);
         }
-    }
 
+        // Fictional energy emitters
+        const emitterMaterial =
+            new THREE.MeshBasicMaterial({
+                color: 0x33ddff
+            });
+
+        const emitter1 = new THREE.Mesh(
+            new THREE.SphereGeometry(0.12, 12, 12),
+            emitterMaterial
+        );
+
+        emitter1.position.set(
+            -0.65,
+            0.85,
+            -2.15
+        );
+
+        this.group.add(emitter1);
+
+        const emitter2 = emitter1.clone();
+
+        emitter2.position.x = 0.65;
+
+        this.group.add(emitter2);
+    }
 
     // ======================================
     // BIKE
@@ -129,19 +136,15 @@ export class Vehicle {
 
     createBike() {
 
-        const wheelMaterial =
-            new THREE.MeshStandardMaterial({
-                color: 0x111111
-            });
-
-
         const frameMaterial =
             new THREE.MeshStandardMaterial({
                 color: 0x2266ff
             });
 
-
-        // Rear wheel
+        const wheelMaterial =
+            new THREE.MeshStandardMaterial({
+                color: 0x111111
+            });
 
         const rearWheel = new THREE.Mesh(
             new THREE.TorusGeometry(
@@ -153,30 +156,16 @@ export class Vehicle {
             wheelMaterial
         );
 
-        rearWheel.rotation.y =
-            Math.PI / 2;
-
-        rearWheel.position.set(
-            0,
-            0.55,
-            0.9
-        );
+        rearWheel.rotation.y = Math.PI / 2;
+        rearWheel.position.set(0, 0.55, 0.9);
 
         this.group.add(rearWheel);
 
+        const frontWheel = rearWheel.clone();
 
-        // Front wheel
-
-        const frontWheel =
-            rearWheel.clone();
-
-        frontWheel.position.z =
-            -0.9;
+        frontWheel.position.z = -0.9;
 
         this.group.add(frontWheel);
-
-
-        // Main frame
 
         const frame = new THREE.Mesh(
             new THREE.BoxGeometry(
@@ -187,36 +176,9 @@ export class Vehicle {
             frameMaterial
         );
 
-        frame.position.y =
-            0.95;
+        frame.position.y = 0.95;
 
         this.group.add(frame);
-
-
-        // Lower frame
-
-        const lowerFrame = new THREE.Mesh(
-            new THREE.BoxGeometry(
-                0.14,
-                0.3,
-                1.1
-            ),
-            frameMaterial
-        );
-
-        lowerFrame.position.set(
-            0,
-            0.7,
-            0
-        );
-
-        lowerFrame.rotation.x =
-            Math.PI / 6;
-
-        this.group.add(lowerFrame);
-
-
-        // Seat
 
         const seat = new THREE.Mesh(
             new THREE.BoxGeometry(
@@ -237,9 +199,6 @@ export class Vehicle {
 
         this.group.add(seat);
 
-
-        // Handlebars
-
         const handlebars = new THREE.Mesh(
             new THREE.BoxGeometry(
                 0.8,
@@ -259,62 +218,41 @@ export class Vehicle {
 
         this.group.add(handlebars);
 
+        // Fictional side energy emitters
+        const energyMaterial =
+            new THREE.MeshBasicMaterial({
+                color: 0xff22dd
+            });
 
-        // Handlebar stem
-
-        const stem = new THREE.Mesh(
-            new THREE.BoxGeometry(
-                0.12,
-                0.5,
-                0.12
+        const emitter1 = new THREE.Mesh(
+            new THREE.SphereGeometry(
+                0.1,
+                12,
+                12
             ),
-            frameMaterial
+            energyMaterial
         );
 
-        stem.position.set(
-            0,
-            1.2,
+        emitter1.position.set(
+            -0.35,
+            1.0,
             -0.85
         );
 
-        stem.rotation.x =
-            -0.25;
+        this.group.add(emitter1);
 
-        this.group.add(stem);
+        const emitter2 = emitter1.clone();
 
+        emitter2.position.x = 0.35;
 
-        // Headlight
-
-        const headlight = new THREE.Mesh(
-            new THREE.SphereGeometry(
-                0.12,
-                16,
-                16
-            ),
-            new THREE.MeshStandardMaterial({
-                color: 0xffffaa
-            })
-        );
-
-        headlight.position.set(
-            0,
-            1.3,
-            -1.0
-        );
-
-        this.group.add(headlight);
+        this.group.add(emitter2);
     }
-
 
     // ======================================
     // JET
     // ======================================
 
     createJet() {
-
-        this.group.position.y =
-            12;
-
 
         const body = new THREE.Mesh(
             new THREE.CylinderGeometry(
@@ -328,13 +266,9 @@ export class Vehicle {
             })
         );
 
-        body.rotation.x =
-            Math.PI / 2;
+        body.rotation.x = Math.PI / 2;
 
         this.group.add(body);
-
-
-        // Main wings
 
         const wings = new THREE.Mesh(
             new THREE.BoxGeometry(
@@ -349,9 +283,6 @@ export class Vehicle {
 
         this.group.add(wings);
 
-
-        // Tail fin
-
         const tail = new THREE.Mesh(
             new THREE.BoxGeometry(
                 0.2,
@@ -363,13 +294,13 @@ export class Vehicle {
             })
         );
 
-        tail.position.y = 0.7;
-        tail.position.z = 1.8;
+        tail.position.set(
+            0,
+            0.7,
+            1.8
+        );
 
         this.group.add(tail);
-
-
-        // Cockpit
 
         const cockpit = new THREE.Mesh(
             new THREE.SphereGeometry(
@@ -390,76 +321,55 @@ export class Vehicle {
             1.3
         );
 
-        cockpit.position.z =
-            -0.8;
+        cockpit.position.z = -0.8;
 
         this.group.add(cockpit);
 
-
-        // Engines
-
-        const engineMaterial =
-            new THREE.MeshStandardMaterial({
-                color: 0x444444
+        // Fictional energy emitters
+        const energyMaterial =
+            new THREE.MeshBasicMaterial({
+                color: 0xff5533
             });
 
-
-        const engine1 = new THREE.Mesh(
-            new THREE.CylinderGeometry(
-                0.25,
-                0.25,
-                1.2,
-                16
+        const emitter1 = new THREE.Mesh(
+            new THREE.SphereGeometry(
+                0.18,
+                12,
+                12
             ),
-            engineMaterial
+            energyMaterial
         );
 
-        engine1.rotation.x =
-            Math.PI / 2;
-
-        engine1.position.set(
-            -1,
+        emitter1.position.set(
+            -0.8,
             0,
-            1.8
+            -2.5
         );
 
-        this.group.add(engine1);
+        this.group.add(emitter1);
 
+        const emitter2 = emitter1.clone();
 
-        const engine2 =
-            engine1.clone();
+        emitter2.position.x = 0.8;
 
-        engine2.position.x =
-            1;
-
-        this.group.add(engine2);
+        this.group.add(emitter2);
     }
 
-
     // ======================================
-    // ENTER
+    // ENTER / EXIT
     // ======================================
 
     enter() {
-
         this.isOccupied = true;
     }
 
-
-    // ======================================
-    // EXIT
-    // ======================================
-
     exit() {
-
         this.isOccupied = false;
-
         this.speed = 0;
     }
 
-
     // ======================================
-    // VEHICLE MOVEMENT
+    // UPDATE
     // ======================================
 
     update(keys) {
@@ -468,72 +378,58 @@ export class Vehicle {
             return;
         }
 
-
         let acceleration = 0.01;
-
-        let maximumSpeed =
-            this.maxSpeed;
-
+        let maximumSpeed = this.maxSpeed;
 
         if (this.type === "bike") {
-
             acceleration = 0.015;
-
             maximumSpeed = 0.45;
         }
 
-
         if (this.type === "jet") {
-
             acceleration = 0.02;
-
             maximumSpeed = 0.8;
         }
 
-
-        // Accelerate
-
         if (keys["w"]) {
-
-            this.speed +=
-                acceleration;
+            this.speed += acceleration;
         }
-
-
-        // Reverse
 
         if (keys["s"]) {
-
-            this.speed -=
-                acceleration;
+            this.speed -= acceleration;
         }
 
-
-        this.speed =
-            THREE.MathUtils.clamp(
-                this.speed,
-                -maximumSpeed / 2,
-                maximumSpeed
-            );
-
-
-        // Steering
+        this.speed = THREE.MathUtils.clamp(
+            this.speed,
+            -maximumSpeed / 2,
+            maximumSpeed
+        );
 
         if (keys["a"]) {
-
-            this.group.rotation.y +=
-                0.03;
+            this.group.rotation.y += 0.03;
         }
-
 
         if (keys["d"]) {
-
-            this.group.rotation.y -=
-                0.03;
+            this.group.rotation.y -= 0.03;
         }
 
+        // Jet flight controls
+        if (this.type === "jet") {
 
-        // Move forward
+            if (keys[" "]) {
+                this.group.position.y += 0.18;
+            }
+
+            if (keys["control"]) {
+                this.group.position.y -= 0.18;
+            }
+
+            this.group.position.y =
+                Math.max(
+                    8,
+                    this.group.position.y
+                );
+        }
 
         const direction =
             new THREE.Vector3(
@@ -542,35 +438,96 @@ export class Vehicle {
                 -1
             );
 
-
         direction.applyQuaternion(
             this.group.quaternion
         );
-
 
         this.group.position.addScaledVector(
             direction,
             this.speed
         );
 
-
-        // Jet vertical controls
+        // ==================================
+        // FICTIONAL VEHICLE ENERGY WEAPON
+        // ==================================
 
         if (
-            this.type === "jet"
+            keys["f"] &&
+            this.weaponCooldown <= 0
         ) {
 
-            if (keys[" "]) {
+            this.fireEnergyPulse();
 
-                this.group.position.y +=
-                    0.15;
-            }
-
-            if (keys["control"]) {
-
-                this.group.position.y -=
-                    0.15;
-            }
+            this.weaponCooldown = 20;
         }
+
+        if (this.weaponCooldown > 0) {
+            this.weaponCooldown--;
+        }
+    }
+
+    // ======================================
+    // ENERGY PULSE
+    // ======================================
+
+    fireEnergyPulse() {
+
+        const projectile =
+            new THREE.Mesh(
+                new THREE.SphereGeometry(
+                    0.12,
+                    12,
+                    12
+                ),
+                new THREE.MeshBasicMaterial({
+                    color: 0x33ffff
+                })
+            );
+
+        const direction =
+            new THREE.Vector3(
+                0,
+                0,
+                -1
+            );
+
+        direction.applyQuaternion(
+            this.group.quaternion
+        );
+
+        projectile.position.copy(
+            this.group.position
+        );
+
+        projectile.position.y += 1;
+
+        this.scene.add(projectile);
+
+        let distance = 0;
+
+        const moveProjectile = () => {
+
+            projectile.position.addScaledVector(
+                direction,
+                0.8
+            );
+
+            distance += 0.8;
+
+            if (distance < 80) {
+
+                requestAnimationFrame(
+                    moveProjectile
+                );
+
+            } else {
+
+                this.scene.remove(
+                    projectile
+                );
+            }
+        };
+
+        moveProjectile();
     }
 }
