@@ -18,9 +18,9 @@ export class Player {
 
         this.isGrounded = true;
 
-        scene.add(this.group);
+        this.mixer = null;
 
-        // Load Logan's 3D model
+        scene.add(this.group);
 
         this.loadModel();
     }
@@ -30,7 +30,7 @@ export class Player {
         const loader = new GLTFLoader();
 
         loader.load(
-            "../assets/characters/logan.glb",
+            "./assets/characters/logan_blingz_original.glb",
 
             (gltf) => {
 
@@ -50,7 +50,9 @@ export class Player {
 
                 this.group.add(model);
 
-                // Play first animation if available
+                this.model = model;
+
+                // Load animations if the model has any
 
                 if (
                     gltf.animations &&
@@ -62,25 +64,39 @@ export class Player {
                             model
                         );
 
-                    this.mixer.clipAction(
-                        gltf.animations[0]
-                    ).play();
+                    const animation =
+                        this.mixer.clipAction(
+                            gltf.animations[0]
+                        );
+
+                    animation.play();
                 }
 
                 console.log(
-                    "Logan 3D model loaded!"
+                    "Logan 3D model loaded successfully!"
                 );
             },
 
-            undefined,
+            (progress) => {
+
+                if (progress.total) {
+
+                    const percent =
+                        (progress.loaded /
+                         progress.total) * 100;
+
+                    console.log(
+                        `Logan model: ${percent.toFixed(0)}%`
+                    );
+                }
+            },
 
             (error) => {
 
                 console.error(
-                    "Could not load logan.glb:",
+                    "Could not load Logan model:",
                     error
                 );
-
             }
         );
     }
@@ -90,15 +106,11 @@ export class Player {
         let currentSpeed =
             this.speed;
 
-        // Running
-
         if (keys["shift"]) {
 
             currentSpeed =
                 this.runSpeed;
         }
-
-        // Movement
 
         if (keys["w"]) {
 
@@ -159,11 +171,13 @@ export class Player {
             this.isGrounded = true;
         }
 
-        // Animation
+        // Update animations
 
         if (this.mixer) {
 
-            this.mixer.update(delta);
+            this.mixer.update(
+                delta
+            );
         }
     }
 }
