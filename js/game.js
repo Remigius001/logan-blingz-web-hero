@@ -1,4 +1,5 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+import { Player } from "./player.js";
 
 // ==============================
 // GAME SETUP
@@ -17,6 +18,10 @@ const camera = new THREE.PerspectiveCamera(
 
 camera.position.set(0, 5, 10);
 
+// ==============================
+// RENDERER
+// ==============================
+
 const renderer = new THREE.WebGLRenderer({
     antialias: true
 });
@@ -29,7 +34,7 @@ renderer.setSize(
 document.body.appendChild(renderer.domElement);
 
 // ==============================
-// LIGHT
+// LIGHTING
 // ==============================
 
 const sunlight = new THREE.DirectionalLight(
@@ -37,7 +42,11 @@ const sunlight = new THREE.DirectionalLight(
     3
 );
 
-sunlight.position.set(10, 20, 10);
+sunlight.position.set(
+    10,
+    20,
+    10
+);
 
 scene.add(sunlight);
 
@@ -53,7 +62,10 @@ scene.add(
 // ==============================
 
 const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(200, 200),
+    new THREE.PlaneGeometry(
+        200,
+        200
+    ),
     new THREE.MeshStandardMaterial({
         color: 0x444444
     })
@@ -64,33 +76,38 @@ ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 
 // ==============================
-// TEST PLAYER
+// PLAYER
 // ==============================
 
-const player = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 2, 1),
-    new THREE.MeshStandardMaterial({
-        color: 0x2255cc
-    })
-);
-
-player.position.y = 1;
-
-scene.add(player);
+const player = new Player(scene);
 
 // ==============================
-// CONTROLS
+// KEYBOARD
 // ==============================
 
 const keys = {};
 
-window.addEventListener("keydown", (event) => {
-    keys[event.key.toLowerCase()] = true;
-});
+window.addEventListener(
+    "keydown",
+    (event) => {
 
-window.addEventListener("keyup", (event) => {
-    keys[event.key.toLowerCase()] = false;
-});
+        keys[
+            event.key.toLowerCase()
+        ] = true;
+
+    }
+);
+
+window.addEventListener(
+    "keyup",
+    (event) => {
+
+        keys[
+            event.key.toLowerCase()
+        ] = false;
+
+    }
+);
 
 // ==============================
 // GAME LOOP
@@ -98,34 +115,31 @@ window.addEventListener("keyup", (event) => {
 
 function animate() {
 
-    requestAnimationFrame(animate);
+    requestAnimationFrame(
+        animate
+    );
 
-    const speed = 0.12;
+    // Update Logan
 
-    if (keys["w"]) {
-        player.position.z -= speed;
-    }
+    player.update(
+        keys
+    );
 
-    if (keys["s"]) {
-        player.position.z += speed;
-    }
+    // Camera follows Logan
 
-    if (keys["a"]) {
-        player.position.x -= speed;
-    }
+    camera.position.x =
+        player.group.position.x;
 
-    if (keys["d"]) {
-        player.position.x += speed;
-    }
-
-    camera.position.x = player.position.x;
-    camera.position.z = player.position.z + 10;
+    camera.position.z =
+        player.group.position.z + 10;
 
     camera.lookAt(
-        player.position.x,
-        1,
-        player.position.z
+        player.group.position.x,
+        1.5,
+        player.group.position.z
     );
+
+    // Render
 
     renderer.render(
         scene,
@@ -133,25 +147,26 @@ function animate() {
     );
 }
 
-// Start game
-
 animate();
 
 // ==============================
 // WINDOW RESIZE
 // ==============================
 
-window.addEventListener("resize", () => {
+window.addEventListener(
+    "resize",
+    () => {
 
-    camera.aspect =
-        window.innerWidth /
-        window.innerHeight;
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
 
-    camera.updateProjectionMatrix();
+        camera.updateProjectionMatrix();
 
-    renderer.setSize(
-        window.innerWidth,
-        window.innerHeight
-    );
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
 
-});
+    }
+);
