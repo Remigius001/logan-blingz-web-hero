@@ -1,5 +1,8 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
-import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js";
+import * as THREE from "three";
+
+import { GLTFLoader } from
+"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js";
+
 
 export class Player {
 
@@ -7,13 +10,17 @@ export class Player {
 
         this.scene = scene;
 
-        this.group = new THREE.Group();
+        this.group =
+            new THREE.Group();
 
         this.speed = 0.12;
+
         this.runSpeed = 0.22;
 
         this.velocityY = 0;
+
         this.gravity = -0.02;
+
         this.jumpPower = 0.35;
 
         this.isGrounded = true;
@@ -25,16 +32,22 @@ export class Player {
         this.loadModel();
     }
 
+
     loadModel() {
 
-        const loader = new GLTFLoader();
+        const loader =
+            new GLTFLoader();
+
 
         loader.load(
+
             "./assets/characters/logan_blingz_original.glb",
 
             (gltf) => {
 
-                const model = gltf.scene;
+                const model =
+                    gltf.scene;
+
 
                 model.scale.set(
                     1,
@@ -42,17 +55,22 @@ export class Player {
                     1
                 );
 
+
                 model.position.set(
                     0,
                     0,
                     0
                 );
 
-                this.group.add(model);
 
-                this.model = model;
+                this.group.add(
+                    model
+                );
 
-                // Load animations if the model has any
+
+                this.model =
+                    model;
+
 
                 if (
                     gltf.animations &&
@@ -64,79 +82,93 @@ export class Player {
                             model
                         );
 
-                    const animation =
+
+                    const action =
                         this.mixer.clipAction(
                             gltf.animations[0]
                         );
 
-                    animation.play();
+
+                    action.play();
                 }
 
+
                 console.log(
-                    "Logan 3D model loaded successfully!"
+                    "Logan model loaded!"
                 );
             },
 
+
             (progress) => {
 
-                if (progress.total) {
+                if (progress.total > 0) {
 
                     const percent =
                         (progress.loaded /
                          progress.total) * 100;
 
                     console.log(
-                        `Logan model: ${percent.toFixed(0)}%`
+                        "Logan:",
+                        percent.toFixed(0) + "%"
                     );
                 }
             },
 
+
             (error) => {
 
                 console.error(
-                    "Could not load Logan model:",
+                    "Logan GLB loading error:",
                     error
                 );
             }
         );
     }
 
-    update(keys, delta = 0.016) {
 
-        let currentSpeed =
+    update(
+        keys,
+        delta = 0.016
+    ) {
+
+        let speed =
             this.speed;
+
 
         if (keys["shift"]) {
 
-            currentSpeed =
+            speed =
                 this.runSpeed;
         }
+
 
         if (keys["w"]) {
 
             this.group.position.z -=
-                currentSpeed;
+                speed;
         }
+
 
         if (keys["s"]) {
 
             this.group.position.z +=
-                currentSpeed;
+                speed;
         }
+
 
         if (keys["a"]) {
 
             this.group.position.x -=
-                currentSpeed;
+                speed;
         }
+
 
         if (keys["d"]) {
 
             this.group.position.x +=
-                currentSpeed;
+                speed;
         }
 
-        // Jump
 
         if (
             keys[" "] &&
@@ -150,15 +182,14 @@ export class Player {
                 false;
         }
 
-        // Gravity
 
         this.velocityY +=
             this.gravity;
 
+
         this.group.position.y +=
             this.velocityY;
 
-        // Ground
 
         if (
             this.group.position.y <= 0
@@ -171,7 +202,6 @@ export class Player {
             this.isGrounded = true;
         }
 
-        // Update animations
 
         if (this.mixer) {
 
