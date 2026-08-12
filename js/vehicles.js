@@ -11,18 +11,16 @@ export class Vehicle {
 
         this.speed = 0;
         this.maxSpeed = 0.35;
-
         this.isOccupied = false;
-
         this.weaponCooldown = 0;
 
         this.createVehicle();
 
         this.group.position.set(x, 0, z);
 
-        // Start the jet high above the city
+        // Start jet at a visible flying height
         if (this.type === "jet") {
-            this.group.position.y = 30;
+            this.group.position.y = 8;
         }
 
         scene.add(this.group);
@@ -74,14 +72,14 @@ export class Vehicle {
                 color: 0x111111
             });
 
-        const wheelPositions = [
+        const positions = [
             [-1.15, 0.4, -1.35],
             [1.15, 0.4, -1.35],
             [-1.15, 0.4, 1.35],
             [1.15, 0.4, 1.35]
         ];
 
-        for (const p of wheelPositions) {
+        for (const p of positions) {
 
             const wheel = new THREE.Mesh(
                 new THREE.CylinderGeometry(
@@ -103,31 +101,6 @@ export class Vehicle {
 
             this.group.add(wheel);
         }
-
-        // Fictional energy emitters
-        const emitterMaterial =
-            new THREE.MeshBasicMaterial({
-                color: 0x33ddff
-            });
-
-        const emitter1 = new THREE.Mesh(
-            new THREE.SphereGeometry(0.12, 12, 12),
-            emitterMaterial
-        );
-
-        emitter1.position.set(
-            -0.65,
-            0.85,
-            -2.15
-        );
-
-        this.group.add(emitter1);
-
-        const emitter2 = emitter1.clone();
-
-        emitter2.position.x = 0.65;
-
-        this.group.add(emitter2);
     }
 
     // ======================================
@@ -217,35 +190,6 @@ export class Vehicle {
         );
 
         this.group.add(handlebars);
-
-        // Fictional side energy emitters
-        const energyMaterial =
-            new THREE.MeshBasicMaterial({
-                color: 0xff22dd
-            });
-
-        const emitter1 = new THREE.Mesh(
-            new THREE.SphereGeometry(
-                0.1,
-                12,
-                12
-            ),
-            energyMaterial
-        );
-
-        emitter1.position.set(
-            -0.35,
-            1.0,
-            -0.85
-        );
-
-        this.group.add(emitter1);
-
-        const emitter2 = emitter1.clone();
-
-        emitter2.position.x = 0.35;
-
-        this.group.add(emitter2);
     }
 
     // ======================================
@@ -270,10 +214,12 @@ export class Vehicle {
 
         this.group.add(body);
 
+        // Wings
+
         const wings = new THREE.Mesh(
             new THREE.BoxGeometry(
                 7,
-                0.15,
+                0.18,
                 1.4
             ),
             new THREE.MeshStandardMaterial({
@@ -283,10 +229,12 @@ export class Vehicle {
 
         this.group.add(wings);
 
+        // Tail
+
         const tail = new THREE.Mesh(
             new THREE.BoxGeometry(
-                0.2,
-                1.4,
+                0.25,
+                1.6,
                 0.8
             ),
             new THREE.MeshStandardMaterial({
@@ -296,15 +244,17 @@ export class Vehicle {
 
         tail.position.set(
             0,
-            0.7,
+            0.8,
             1.8
         );
 
         this.group.add(tail);
 
+        // Cockpit
+
         const cockpit = new THREE.Mesh(
             new THREE.SphereGeometry(
-                0.55,
+                0.6,
                 20,
                 12
             ),
@@ -318,46 +268,76 @@ export class Vehicle {
         cockpit.scale.set(
             1,
             0.6,
-            1.3
+            1.4
         );
 
         cockpit.position.z = -0.8;
 
         this.group.add(cockpit);
 
-        // Fictional energy emitters
-        const energyMaterial =
-            new THREE.MeshBasicMaterial({
-                color: 0xff5533
+        // Engines
+
+        const engineMaterial =
+            new THREE.MeshStandardMaterial({
+                color: 0x444444
             });
 
-        const emitter1 = new THREE.Mesh(
+        const engine1 = new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                0.25,
+                0.25,
+                1.2,
+                16
+            ),
+            engineMaterial
+        );
+
+        engine1.rotation.x = Math.PI / 2;
+
+        engine1.position.set(
+            -1,
+            0,
+            1.8
+        );
+
+        this.group.add(engine1);
+
+        const engine2 = engine1.clone();
+
+        engine2.position.x = 1;
+
+        this.group.add(engine2);
+
+        // Bright engine glow
+
+        const glowMaterial =
+            new THREE.MeshBasicMaterial({
+                color: 0xff6600
+            });
+
+        const glow1 = new THREE.Mesh(
             new THREE.SphereGeometry(
                 0.18,
                 12,
                 12
             ),
-            energyMaterial
+            glowMaterial
         );
 
-        emitter1.position.set(
-            -0.8,
+        glow1.position.set(
+            -1,
             0,
-            -2.5
+            2.45
         );
 
-        this.group.add(emitter1);
+        this.group.add(glow1);
 
-        const emitter2 = emitter1.clone();
+        const glow2 = glow1.clone();
 
-        emitter2.position.x = 0.8;
+        glow2.position.x = 1;
 
-        this.group.add(emitter2);
+        this.group.add(glow2);
     }
-
-    // ======================================
-    // ENTER / EXIT
-    // ======================================
 
     enter() {
         this.isOccupied = true;
@@ -367,10 +347,6 @@ export class Vehicle {
         this.isOccupied = false;
         this.speed = 0;
     }
-
-    // ======================================
-    // UPDATE
-    // ======================================
 
     update(keys) {
 
@@ -413,30 +389,27 @@ export class Vehicle {
             this.group.rotation.y -= 0.03;
         }
 
-        // Jet flight controls
+        // Jet up/down
+
         if (this.type === "jet") {
 
             if (keys[" "]) {
-                this.group.position.y += 0.18;
+                this.group.position.y += 0.15;
             }
 
             if (keys["control"]) {
-                this.group.position.y -= 0.18;
+                this.group.position.y -= 0.15;
             }
 
             this.group.position.y =
                 Math.max(
-                    8,
+                    3,
                     this.group.position.y
                 );
         }
 
         const direction =
-            new THREE.Vector3(
-                0,
-                0,
-                -1
-            );
+            new THREE.Vector3(0, 0, -1);
 
         direction.applyQuaternion(
             this.group.quaternion
@@ -447,9 +420,7 @@ export class Vehicle {
             this.speed
         );
 
-        // ==================================
-        // FICTIONAL VEHICLE ENERGY WEAPON
-        // ==================================
+        // In-game energy pulse
 
         if (
             keys["f"] &&
@@ -466,23 +437,18 @@ export class Vehicle {
         }
     }
 
-    // ======================================
-    // ENERGY PULSE
-    // ======================================
-
     fireEnergyPulse() {
 
-        const projectile =
-            new THREE.Mesh(
-                new THREE.SphereGeometry(
-                    0.12,
-                    12,
-                    12
-                ),
-                new THREE.MeshBasicMaterial({
-                    color: 0x33ffff
-                })
-            );
+        const projectile = new THREE.Mesh(
+            new THREE.SphereGeometry(
+                0.12,
+                12,
+                12
+            ),
+            new THREE.MeshBasicMaterial({
+                color: 0x33ffff
+            })
+        );
 
         const direction =
             new THREE.Vector3(
@@ -499,13 +465,11 @@ export class Vehicle {
             this.group.position
         );
 
-        projectile.position.y += 1;
-
         this.scene.add(projectile);
 
         let distance = 0;
 
-        const moveProjectile = () => {
+        const move = () => {
 
             projectile.position.addScaledVector(
                 direction,
@@ -516,18 +480,14 @@ export class Vehicle {
 
             if (distance < 80) {
 
-                requestAnimationFrame(
-                    moveProjectile
-                );
+                requestAnimationFrame(move);
 
             } else {
 
-                this.scene.remove(
-                    projectile
-                );
+                this.scene.remove(projectile);
             }
         };
 
-        moveProjectile();
+        move();
     }
 }
