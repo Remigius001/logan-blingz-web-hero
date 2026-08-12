@@ -1,6 +1,8 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+
 import { Player } from "./player.js";
 import { createCity } from "./city.js";
+import { createNPCs } from "./npcs.js";
 
 // ======================================
 // SCENE
@@ -40,7 +42,9 @@ renderer.setPixelRatio(
     Math.min(window.devicePixelRatio, 2)
 );
 
-document.body.appendChild(renderer.domElement);
+document.body.appendChild(
+    renderer.domElement
+);
 
 // ======================================
 // LIGHTING
@@ -79,6 +83,12 @@ createCity(scene);
 const player = new Player(scene);
 
 // ======================================
+// NPCs
+// ======================================
+
+const npcs = createNPCs(scene);
+
+// ======================================
 // KEYBOARD
 // ======================================
 
@@ -97,30 +107,90 @@ window.addEventListener("keyup", (event) => {
 });
 
 // ======================================
+// NPC MOVEMENT
+// ======================================
+
+function updateNPCs() {
+
+    for (const npc of npcs) {
+
+        npc.object.position.x +=
+            Math.cos(npc.direction) *
+            npc.speed;
+
+        npc.object.position.z +=
+            Math.sin(npc.direction) *
+            npc.speed;
+
+        // Occasionally change direction
+
+        if (Math.random() < 0.002) {
+
+            npc.direction =
+                Math.random() *
+                Math.PI *
+                2;
+        }
+
+        // Keep NPCs inside the city
+
+        if (npc.object.position.x > 140) {
+            npc.object.position.x = 140;
+        }
+
+        if (npc.object.position.x < -140) {
+            npc.object.position.x = -140;
+        }
+
+        if (npc.object.position.z > 140) {
+            npc.object.position.z = 140;
+        }
+
+        if (npc.object.position.z < -140) {
+            npc.object.position.z = -140;
+        }
+    }
+}
+
+// ======================================
 // GAME LOOP
 // ======================================
 
 function animate() {
 
-    requestAnimationFrame(animate);
+    requestAnimationFrame(
+        animate
+    );
 
     // Update Logan
 
     player.update(keys);
 
+    // Update NPCs
+
+    updateNPCs();
+
     // ==================================
     // CAMERA FOLLOW
     // ==================================
 
-    const playerX = player.group.position.x;
-    const playerY = player.group.position.y;
-    const playerZ = player.group.position.z;
+    const playerX =
+        player.group.position.x;
 
-    camera.position.x = playerX;
+    const playerY =
+        player.group.position.y;
 
-    camera.position.y = playerY + 5;
+    const playerZ =
+        player.group.position.z;
 
-    camera.position.z = playerZ + 10;
+    camera.position.x =
+        playerX;
+
+    camera.position.y =
+        playerY + 5;
+
+    camera.position.z =
+        playerZ + 10;
 
     camera.lookAt(
         playerX,
@@ -148,17 +218,20 @@ animate();
 // WINDOW RESIZE
 // ======================================
 
-window.addEventListener("resize", () => {
+window.addEventListener(
+    "resize",
+    () => {
 
-    camera.aspect =
-        window.innerWidth /
-        window.innerHeight;
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
 
-    camera.updateProjectionMatrix();
+        camera.updateProjectionMatrix();
 
-    renderer.setSize(
-        window.innerWidth,
-        window.innerHeight
-    );
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
 
-});
+    }
+);
