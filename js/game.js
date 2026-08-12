@@ -3,6 +3,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.m
 document.body.innerHTML = "";
 
 const scene = new THREE.Scene();
+
 scene.background = new THREE.Color(0x87ceeb);
 
 const camera = new THREE.PerspectiveCamera(
@@ -14,10 +15,18 @@ const camera = new THREE.PerspectiveCamera(
 
 camera.position.z = 5;
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
+const renderer = new THREE.WebGLRenderer({
+    antialias: true
+});
 
-document.body.appendChild(renderer.domElement);
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+document.body.appendChild(
+    renderer.domElement
+);
 
 const cube = new THREE.Mesh(
     new THREE.BoxGeometry(2, 2, 2),
@@ -29,12 +38,30 @@ const cube = new THREE.Mesh(
 scene.add(cube);
 
 function animate() {
+
     requestAnimationFrame(animate);
 
     cube.rotation.x += 0.01;
     cube.rotation.y += 0.01;
 
-    renderer.render(scene, camera);
+    renderer.render(
+        scene,
+        camera
+    );
 }
 
 animate();
+
+window.addEventListener("resize", () => {
+
+    camera.aspect =
+        window.innerWidth /
+        window.innerHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+    );
+});
