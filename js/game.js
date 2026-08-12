@@ -3,6 +3,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.m
 import { Player } from "./player.js";
 import { createCity } from "./city.js";
 import { createNPCs } from "./npcs.js";
+import { Vehicle } from "./vehicles.js";
 
 // ======================================
 // SCENE
@@ -10,28 +11,36 @@ import { createNPCs } from "./npcs.js";
 
 const scene = new THREE.Scene();
 
-scene.background = new THREE.Color(0x87ceeb);
+scene.background =
+    new THREE.Color(0x87ceeb);
 
 // ======================================
 // CAMERA
 // ======================================
 
-const camera = new THREE.PerspectiveCamera(
-    70,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-);
+const camera =
+    new THREE.PerspectiveCamera(
+        70,
+        window.innerWidth /
+        window.innerHeight,
+        0.1,
+        1000
+    );
 
-camera.position.set(0, 5, 10);
+camera.position.set(
+    0,
+    5,
+    10
+);
 
 // ======================================
 // RENDERER
 // ======================================
 
-const renderer = new THREE.WebGLRenderer({
-    antialias: true
-});
+const renderer =
+    new THREE.WebGLRenderer({
+        antialias: true
+    });
 
 renderer.setSize(
     window.innerWidth,
@@ -39,7 +48,10 @@ renderer.setSize(
 );
 
 renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio, 2)
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
 );
 
 document.body.appendChild(
@@ -50,10 +62,11 @@ document.body.appendChild(
 // LIGHTING
 // ======================================
 
-const sunlight = new THREE.DirectionalLight(
-    0xffffff,
-    3
-);
+const sunlight =
+    new THREE.DirectionalLight(
+        0xffffff,
+        3
+    );
 
 sunlight.position.set(
     10,
@@ -63,12 +76,12 @@ sunlight.position.set(
 
 scene.add(sunlight);
 
-const ambientLight = new THREE.AmbientLight(
-    0xffffff,
-    1
+scene.add(
+    new THREE.AmbientLight(
+        0xffffff,
+        1
+    )
 );
-
-scene.add(ambientLight);
 
 // ======================================
 // CITY
@@ -80,13 +93,26 @@ createCity(scene);
 // PLAYER
 // ======================================
 
-const player = new Player(scene);
+const player =
+    new Player(scene);
 
 // ======================================
-// NPCs
+// NPCS
 // ======================================
 
-const npcs = createNPCs(scene);
+const npcs =
+    createNPCs(scene);
+
+// ======================================
+// VEHICLE
+// ======================================
+
+const car =
+    new Vehicle(
+        scene,
+        8,
+        0
+    );
 
 // ======================================
 // KEYBOARD
@@ -94,17 +120,75 @@ const npcs = createNPCs(scene);
 
 const keys = {};
 
-window.addEventListener("keydown", (event) => {
+window.addEventListener(
+    "keydown",
+    (event) => {
 
-    keys[event.key.toLowerCase()] = true;
+        keys[
+            event.key.toLowerCase()
+        ] = true;
 
-});
+        // E = enter / exit car
 
-window.addEventListener("keyup", (event) => {
+        if (
+            event.key.toLowerCase()
+            === "e"
+        ) {
 
-    keys[event.key.toLowerCase()] = false;
+            const distance =
+                player.group.position
+                    .distanceTo(
+                        car.group.position
+                    );
 
-});
+            if (
+                distance < 5 &&
+                !car.isOccupied
+            ) {
+
+                car.enter();
+
+                player.group.visible =
+                    false;
+
+                console.log(
+                    "Logan entered the car"
+                );
+
+            } else if (
+                car.isOccupied
+            ) {
+
+                car.exit();
+
+                player.group.visible =
+                    true;
+
+                player.group.position.copy(
+                    car.group.position
+                );
+
+                player.group.position.x +=
+                    2;
+
+                console.log(
+                    "Logan exited the car"
+                );
+            }
+        }
+    }
+);
+
+window.addEventListener(
+    "keyup",
+    (event) => {
+
+        keys[
+            event.key.toLowerCase()
+        ] = false;
+
+    }
+);
 
 // ======================================
 // NPC MOVEMENT
@@ -115,39 +199,25 @@ function updateNPCs() {
     for (const npc of npcs) {
 
         npc.object.position.x +=
-            Math.cos(npc.direction) *
+            Math.cos(
+                npc.direction
+            ) *
             npc.speed;
 
         npc.object.position.z +=
-            Math.sin(npc.direction) *
+            Math.sin(
+                npc.direction
+            ) *
             npc.speed;
 
-        // Occasionally change direction
-
-        if (Math.random() < 0.002) {
+        if (
+            Math.random() < 0.002
+        ) {
 
             npc.direction =
                 Math.random() *
                 Math.PI *
                 2;
-        }
-
-        // Keep NPCs inside the city
-
-        if (npc.object.position.x > 140) {
-            npc.object.position.x = 140;
-        }
-
-        if (npc.object.position.x < -140) {
-            npc.object.position.x = -140;
-        }
-
-        if (npc.object.position.z > 140) {
-            npc.object.position.z = 140;
-        }
-
-        if (npc.object.position.z < -140) {
-            npc.object.position.z = -140;
         }
     }
 }
@@ -162,45 +232,52 @@ function animate() {
         animate
     );
 
-    // Update Logan
+    if (!car.isOccupied) {
 
-    player.update(keys);
+        player.update(keys);
 
-    // Update NPCs
+    }
 
     updateNPCs();
 
-    // ==================================
-    // CAMERA FOLLOW
-    // ==================================
-
-    const playerX =
-        player.group.position.x;
-
-    const playerY =
-        player.group.position.y;
-
-    const playerZ =
-        player.group.position.z;
-
-    camera.position.x =
-        playerX;
-
-    camera.position.y =
-        playerY + 5;
-
-    camera.position.z =
-        playerZ + 10;
-
-    camera.lookAt(
-        playerX,
-        playerY + 1.5,
-        playerZ
-    );
+    car.update(keys);
 
     // ==================================
-    // RENDER
+    // CAMERA
     // ==================================
+
+    if (car.isOccupied) {
+
+        camera.position.x =
+            car.group.position.x;
+
+        camera.position.y =
+            car.group.position.y + 5;
+
+        camera.position.z =
+            car.group.position.z + 10;
+
+        camera.lookAt(
+            car.group.position
+        );
+
+    } else {
+
+        camera.position.x =
+            player.group.position.x;
+
+        camera.position.y =
+            player.group.position.y + 5;
+
+        camera.position.z =
+            player.group.position.z + 10;
+
+        camera.lookAt(
+            player.group.position.x,
+            player.group.position.y + 1.5,
+            player.group.position.z
+        );
+    }
 
     renderer.render(
         scene,
@@ -209,13 +286,13 @@ function animate() {
 }
 
 // ======================================
-// START GAME
+// START
 // ======================================
 
 animate();
 
 // ======================================
-// WINDOW RESIZE
+// RESIZE
 // ======================================
 
 window.addEventListener(
@@ -232,6 +309,5 @@ window.addEventListener(
             window.innerWidth,
             window.innerHeight
         );
-
     }
 );
