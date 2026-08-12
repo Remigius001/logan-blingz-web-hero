@@ -54,11 +54,7 @@ const sunlight = new THREE.DirectionalLight(
     4
 );
 
-sunlight.position.set(
-    20,
-    30,
-    20
-);
+sunlight.position.set(20, 30, 20);
 
 scene.add(sunlight);
 
@@ -82,7 +78,7 @@ createCity(scene);
 const player = new Player(scene);
 
 // ======================================
-// NPCS
+// NPCs
 // ======================================
 
 const npcs = createNPCs(scene);
@@ -91,7 +87,6 @@ const npcs = createNPCs(scene);
 // VEHICLES
 // ======================================
 
-// Car: directly to Logan's right
 const car = new Vehicle(
     scene,
     "car",
@@ -99,7 +94,6 @@ const car = new Vehicle(
     0
 );
 
-// Bike: a little farther right
 const bike = new Vehicle(
     scene,
     "bike",
@@ -107,7 +101,6 @@ const bike = new Vehicle(
     0
 );
 
-// Jet: directly in front of Logan
 const jet = new Vehicle(
     scene,
     "jet",
@@ -115,17 +108,12 @@ const jet = new Vehicle(
     -10
 );
 
-// Force the jet into a clearly visible position
+// Jet is visible above the city
 jet.group.position.set(
     0,
     6,
     -10
 );
-
-// Make sure all vehicles are visible
-car.group.visible = true;
-bike.group.visible = true;
-jet.group.visible = true;
 
 const vehicles = [
     car,
@@ -133,10 +121,48 @@ const vehicles = [
     jet
 ];
 
+// ======================================
+// JET ENTRY POINT
+// ======================================
+
+// This invisible point is where Logan
+// can stand to enter the jet.
+const jetEntryPoint =
+    new THREE.Vector3(
+        0,
+        0,
+        -7
+    );
+
+// Visible landing/entry pad
+const jetPad = new THREE.Mesh(
+    new THREE.CylinderGeometry(
+        2.5,
+        2.5,
+        0.15,
+        32
+    ),
+    new THREE.MeshStandardMaterial({
+        color: 0x333333
+    })
+);
+
+jetPad.position.set(
+    0,
+    0.1,
+    -7
+);
+
+scene.add(jetPad);
+
+// ======================================
+// CURRENT VEHICLE
+// ======================================
+
 let currentVehicle = null;
 
 // ======================================
-// KEYBOARD
+// CONTROLS
 // ======================================
 
 const keys = {};
@@ -156,7 +182,10 @@ window.addEventListener(
 
         if (key === "e") {
 
-            // EXIT
+            // ------------------------------
+            // EXIT VEHICLE
+            // ------------------------------
+
             if (currentVehicle) {
 
                 const vehicle =
@@ -164,42 +193,76 @@ window.addEventListener(
 
                 vehicle.exit();
 
-                player.group.visible = true;
+                player.group.visible =
+                    true;
 
-                // Put Logan next to the vehicle
-                player.group.position.set(
-                    vehicle.group.position.x + 3,
-                    0,
-                    vehicle.group.position.z
-                );
+                if (vehicle.type === "jet") {
+
+                    player.group.position.set(
+                        jetEntryPoint.x + 3,
+                        0,
+                        jetEntryPoint.z
+                    );
+
+                } else {
+
+                    player.group.position.set(
+                        vehicle.group.position.x + 3,
+                        0,
+                        vehicle.group.position.z
+                    );
+                }
 
                 currentVehicle = null;
 
                 console.log(
-                    "Exited " + vehicle.type
+                    "Logan exited the " +
+                    vehicle.type
                 );
 
                 return;
             }
 
-            // FIND NEAREST VEHICLE
+            // ------------------------------
+            // FIND ENTERABLE VEHICLE
+            // ------------------------------
+
             let nearestVehicle = null;
             let nearestDistance = Infinity;
 
-            for (const vehicle of vehicles) {
+            for (
+                const vehicle of vehicles
+            ) {
 
-                const distance =
-                    player.group.position.distanceTo(
+                let targetPosition;
+
+                if (
+                    vehicle.type === "jet"
+                ) {
+
+                    // Logan enters the jet
+                    // through the ground pad.
+                    targetPosition =
+                        jetEntryPoint;
+
+                } else {
+
+                    targetPosition =
                         new THREE.Vector3(
                             vehicle.group.position.x,
                             0,
                             vehicle.group.position.z
-                        )
+                        );
+                }
+
+                const distance =
+                    player.group.position.distanceTo(
+                        targetPosition
                     );
 
                 if (
                     distance < nearestDistance &&
-                    distance < 8
+                    distance < 5
                 ) {
 
                     nearestDistance =
@@ -210,7 +273,10 @@ window.addEventListener(
                 }
             }
 
+            // ------------------------------
             // ENTER VEHICLE
+            // ------------------------------
+
             if (nearestVehicle) {
 
                 currentVehicle =
@@ -218,10 +284,11 @@ window.addEventListener(
 
                 currentVehicle.enter();
 
-                player.group.visible = false;
+                player.group.visible =
+                    false;
 
                 console.log(
-                    "Entered " +
+                    "Logan entered the " +
                     currentVehicle.type
                 );
             }
@@ -246,7 +313,9 @@ window.addEventListener(
 
 function updateNPCs() {
 
-    for (const npc of npcs) {
+    for (
+        const npc of npcs
+    ) {
 
         npc.object.position.x +=
             Math.cos(
@@ -287,7 +356,7 @@ function updateNPCs() {
 }
 
 // ======================================
-// VEHICLES
+// VEHICLE UPDATE
 // ======================================
 
 function updateVehicles() {
@@ -305,7 +374,6 @@ function updateVehicles() {
 
 function updateCamera() {
 
-    // Camera follows vehicle
     if (currentVehicle) {
 
         const vehicle =
@@ -329,7 +397,6 @@ function updateCamera() {
         return;
     }
 
-    // Camera follows Logan
     camera.position.x =
         player.group.position.x;
 
@@ -352,23 +419,21 @@ function updateCamera() {
 
 function animate() {
 
-    requestAnimationFrame(animate);
+    requestAnimationFrame(
+        animate
+    );
 
-    // Logan
     if (!currentVehicle) {
+
         player.update(keys);
     }
 
-    // NPCs
     updateNPCs();
 
-    // Vehicle
     updateVehicles();
 
-    // Camera
     updateCamera();
 
-    // Render
     renderer.render(
         scene,
         camera
