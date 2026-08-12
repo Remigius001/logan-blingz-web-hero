@@ -1,14 +1,13 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js";
 
 export class Player {
 
     constructor(scene) {
 
-        this.group = new THREE.Group();
+        this.scene = scene;
 
-        // ==============================
-        // PLAYER SETTINGS
-        // ==============================
+        this.group = new THREE.Group();
 
         this.speed = 0.12;
         this.runSpeed = 0.22;
@@ -19,171 +18,135 @@ export class Player {
 
         this.isGrounded = true;
 
-        // ==============================
-        // BODY
-        // ==============================
-
-        const body = new THREE.Mesh(
-            new THREE.BoxGeometry(1, 1.5, 0.6),
-            new THREE.MeshStandardMaterial({
-                color: 0x2255cc
-            })
-        );
-
-        body.position.y = 2;
-
-        this.group.add(body);
-
-        // ==============================
-        // HEAD
-        // ==============================
-
-        const head = new THREE.Mesh(
-            new THREE.SphereGeometry(
-                0.45,
-                24,
-                24
-            ),
-            new THREE.MeshStandardMaterial({
-                color: 0xffc79c
-            })
-        );
-
-        head.position.y = 3.1;
-
-        this.group.add(head);
-
-        // ==============================
-        // LEFT ARM
-        // ==============================
-
-        const leftArm = new THREE.Mesh(
-            new THREE.BoxGeometry(
-                0.3,
-                1.2,
-                0.3
-            ),
-            new THREE.MeshStandardMaterial({
-                color: 0x2255cc
-            })
-        );
-
-        leftArm.position.set(
-            -0.7,
-            2,
-            0
-        );
-
-        this.group.add(leftArm);
-
-        // ==============================
-        // RIGHT ARM
-        // ==============================
-
-        const rightArm = new THREE.Mesh(
-            new THREE.BoxGeometry(
-                0.3,
-                1.2,
-                0.3
-            ),
-            new THREE.MeshStandardMaterial({
-                color: 0x2255cc
-            })
-        );
-
-        rightArm.position.set(
-            0.7,
-            2,
-            0
-        );
-
-        this.group.add(rightArm);
-
-        // ==============================
-        // LEFT LEG
-        // ==============================
-
-        const leftLeg = new THREE.Mesh(
-            new THREE.BoxGeometry(
-                0.35,
-                1,
-                0.35
-            ),
-            new THREE.MeshStandardMaterial({
-                color: 0x222222
-            })
-        );
-
-        leftLeg.position.set(
-            -0.25,
-            0.75,
-            0
-        );
-
-        this.group.add(leftLeg);
-
-        // ==============================
-        // RIGHT LEG
-        // ==============================
-
-        const rightLeg = leftLeg.clone();
-
-        rightLeg.position.x = 0.25;
-
-        this.group.add(rightLeg);
-
-        // ==============================
-        // ADD PLAYER TO WORLD
-        // ==============================
-
         scene.add(this.group);
+
+        // Load Logan's 3D model
+
+        this.loadModel();
     }
 
-    // ==============================
-    // UPDATE PLAYER
-    // ==============================
+    loadModel() {
 
-    update(keys) {
+        const loader = new GLTFLoader();
 
-        let currentSpeed = this.speed;
+        loader.load(
+            "../assets/characters/logan.glb",
 
-        // Hold SHIFT to run
+            (gltf) => {
 
-        if (
-            keys["shift"]
-        ) {
-            currentSpeed = this.runSpeed;
+                const model = gltf.scene;
+
+                model.scale.set(
+                    1,
+                    1,
+                    1
+                );
+
+                model.position.set(
+                    0,
+                    0,
+                    0
+                );
+
+                this.group.add(model);
+
+                // Play first animation if available
+
+                if (
+                    gltf.animations &&
+                    gltf.animations.length > 0
+                ) {
+
+                    this.mixer =
+                        new THREE.AnimationMixer(
+                            model
+                        );
+
+                    this.mixer.clipAction(
+                        gltf.animations[0]
+                    ).play();
+                }
+
+                console.log(
+                    "Logan 3D model loaded!"
+                );
+            },
+
+            undefined,
+
+            (error) => {
+
+                console.error(
+                    "Could not load logan.glb:",
+                    error
+                );
+
+            }
+        );
+    }
+
+    update(keys, delta = 0.016) {
+
+        let currentSpeed =
+            this.speed;
+
+        // Running
+
+        if (keys["shift"]) {
+
+            currentSpeed =
+                this.runSpeed;
         }
 
-        // ==============================
-        // MOVEMENT
-        // ==============================
+        // Movement
 
         if (keys["w"]) {
-            this.group.position.z -= currentSpeed;
+
+            this.group.position.z -=
+                currentSpeed;
         }
 
         if (keys["s"]) {
-            this.group.position.z += currentSpeed;
+
+            this.group.position.z +=
+                currentSpeed;
         }
 
         if (keys["a"]) {
-            this.group.position.x -= currentSpeed;
+
+            this.group.position.x -=
+                currentSpeed;
         }
 
         if (keys["d"]) {
-            this.group.position.x += currentSpeed;
+
+            this.group.position.x +=
+                currentSpeed;
         }
 
-        // ==============================
-        // JUMP / GRAVITY
-        // ==============================
+        // Jump
 
-        this.velocityY += this.gravity;
+        if (
+            keys[" "] &&
+            this.isGrounded
+        ) {
 
-        this.group.position.y += this.velocityY;
+            this.velocityY =
+                this.jumpPower;
 
-        // Ground level
+            this.isGrounded =
+                false;
+        }
+
+        // Gravity
+
+        this.velocityY +=
+            this.gravity;
+
+        this.group.position.y +=
+            this.velocityY;
+
+        // Ground
 
         if (
             this.group.position.y <= 0
@@ -196,17 +159,11 @@ export class Player {
             this.isGrounded = true;
         }
 
-        // SPACE = JUMP
+        // Animation
 
-        if (
-            keys[" "] &&
-            this.isGrounded
-        ) {
+        if (this.mixer) {
 
-            this.velocityY =
-                this.jumpPower;
-
-            this.isGrounded = false;
+            this.mixer.update(delta);
         }
     }
 }
