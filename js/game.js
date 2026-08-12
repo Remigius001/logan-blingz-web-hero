@@ -22,9 +22,7 @@ renderer.setSize(
     window.innerHeight
 );
 
-document.body.appendChild(
-    renderer.domElement
-);
+document.body.appendChild(renderer.domElement);
 
 const cube = new THREE.Mesh(
     new THREE.BoxGeometry(2, 2, 2),
@@ -42,10 +40,7 @@ function animate() {
     cube.rotation.x += 0.01;
     cube.rotation.y += 0.01;
 
-    renderer.render(
-        scene,
-        camera
-    );
+    renderer.render(scene, camera);
 }
 
 animate();
