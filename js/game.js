@@ -54,7 +54,11 @@ const sunlight = new THREE.DirectionalLight(
     4
 );
 
-sunlight.position.set(10, 20, 10);
+sunlight.position.set(
+    10,
+    20,
+    10
+);
 
 scene.add(sunlight);
 
@@ -87,7 +91,6 @@ const npcs = createNPCs(scene);
 // VEHICLES
 // ======================================
 
-// Car
 const car = new Vehicle(
     scene,
     "car",
@@ -95,7 +98,6 @@ const car = new Vehicle(
     0
 );
 
-// Bike
 const bike = new Vehicle(
     scene,
     "bike",
@@ -103,7 +105,6 @@ const bike = new Vehicle(
     0
 );
 
-// Jet
 const jet = new Vehicle(
     scene,
     "jet",
@@ -111,14 +112,12 @@ const jet = new Vehicle(
     0
 );
 
-// All vehicles
 const vehicles = [
     car,
     bike,
     jet
 ];
 
-// Current vehicle
 let currentVehicle = null;
 
 // ======================================
@@ -137,38 +136,74 @@ window.addEventListener(
         keys[key] = true;
 
         // ==================================
-        // ENTER VEHICLE
+        // ENTER / EXIT VEHICLE
         // ==================================
 
         if (key === "e") {
 
-            // Exit current vehicle
+            // ------------------------------
+            // EXIT CURRENT VEHICLE
+            // ------------------------------
+
             if (currentVehicle) {
 
-                currentVehicle.exit();
+                const vehicle =
+                    currentVehicle;
+
+                vehicle.exit();
 
                 player.group.visible = true;
 
-                player.group.position.copy(
-                    currentVehicle.group.position
-                );
+                // Different exit positions
+                if (vehicle.type === "car") {
 
-                player.group.position.x += 3;
+                    player.group.position.set(
+                        vehicle.group.position.x + 2.5,
+                        0,
+                        vehicle.group.position.z
+                    );
+
+                } else if (
+                    vehicle.type === "bike"
+                ) {
+
+                    player.group.position.set(
+                        vehicle.group.position.x + 1.5,
+                        0,
+                        vehicle.group.position.z + 1
+                    );
+
+                } else if (
+                    vehicle.type === "jet"
+                ) {
+
+                    player.group.position.set(
+                        vehicle.group.position.x + 3,
+                        0,
+                        vehicle.group.position.z + 2
+                    );
+                }
 
                 currentVehicle = null;
 
                 console.log(
-                    "Logan exited the vehicle."
+                    "Logan exited the " +
+                    vehicle.type
                 );
 
                 return;
             }
 
-            // Find nearest vehicle
+            // ------------------------------
+            // FIND NEAREST VEHICLE
+            // ------------------------------
+
             let nearestVehicle = null;
             let nearestDistance = Infinity;
 
-            for (const vehicle of vehicles) {
+            for (
+                const vehicle of vehicles
+            ) {
 
                 const distance =
                     player.group.position.distanceTo(
@@ -188,7 +223,10 @@ window.addEventListener(
                 }
             }
 
-            // Enter nearest vehicle
+            // ------------------------------
+            // ENTER VEHICLE
+            // ------------------------------
+
             if (nearestVehicle) {
 
                 currentVehicle =
@@ -199,7 +237,8 @@ window.addEventListener(
                 player.group.visible = false;
 
                 console.log(
-                    `Logan entered ${currentVehicle.type}.`
+                    "Logan entered the " +
+                    currentVehicle.type
                 );
             }
         }
@@ -223,7 +262,9 @@ window.addEventListener(
 
 function updateNPCs() {
 
-    for (const npc of npcs) {
+    for (
+        const npc of npcs
+    ) {
 
         npc.object.position.x +=
             Math.cos(
@@ -237,17 +278,15 @@ function updateNPCs() {
             ) *
             npc.speed;
 
-        // Randomly change direction
-
-        if (Math.random() < 0.002) {
+        if (
+            Math.random() < 0.002
+        ) {
 
             npc.direction =
                 Math.random() *
                 Math.PI *
                 2;
         }
-
-        // Keep NPCs inside city
 
         npc.object.position.x =
             THREE.MathUtils.clamp(
@@ -266,20 +305,16 @@ function updateNPCs() {
 }
 
 // ======================================
-// VEHICLE UPDATE
+// VEHICLE UPDATES
 // ======================================
 
 function updateVehicles() {
 
-    for (const vehicle of vehicles) {
-
-        if (
-            vehicle === currentVehicle
-        ) {
-
-            vehicle.update(keys);
-        }
+    if (!currentVehicle) {
+        return;
     }
+
+    currentVehicle.update(keys);
 }
 
 // ======================================
@@ -288,25 +323,56 @@ function updateVehicles() {
 
 function updateCamera() {
 
+    // ----------------------------------
+    // VEHICLE CAMERA
+    // ----------------------------------
+
     if (currentVehicle) {
 
-        camera.position.x =
-            currentVehicle.group.position.x;
+        const vehicle =
+            currentVehicle;
 
-        camera.position.y =
-            currentVehicle.group.position.y + 5;
+        if (vehicle.type === "car") {
 
-        camera.position.z =
-            currentVehicle.group.position.z + 10;
+            camera.position.set(
+                vehicle.group.position.x,
+                vehicle.group.position.y + 5,
+                vehicle.group.position.z + 10
+            );
+
+        } else if (
+            vehicle.type === "bike"
+        ) {
+
+            camera.position.set(
+                vehicle.group.position.x,
+                vehicle.group.position.y + 4,
+                vehicle.group.position.z + 8
+            );
+
+        } else if (
+            vehicle.type === "jet"
+        ) {
+
+            camera.position.set(
+                vehicle.group.position.x,
+                vehicle.group.position.y + 6,
+                vehicle.group.position.z + 12
+            );
+        }
 
         camera.lookAt(
-            currentVehicle.group.position.x,
-            currentVehicle.group.position.y + 1,
-            currentVehicle.group.position.z
+            vehicle.group.position.x,
+            vehicle.group.position.y + 1,
+            vehicle.group.position.z
         );
 
         return;
     }
+
+    // ----------------------------------
+    // LOGAN CAMERA
+    // ----------------------------------
 
     camera.position.x =
         player.group.position.x;
@@ -334,22 +400,22 @@ function animate() {
         animate
     );
 
-    // Logan
+    // Logan movement
     if (!currentVehicle) {
 
         player.update(keys);
     }
 
-    // People
+    // NPC movement
     updateNPCs();
 
-    // Vehicles
+    // Vehicle movement
     updateVehicles();
 
     // Camera
     updateCamera();
 
-    // Draw everything
+    // Render
     renderer.render(
         scene,
         camera
@@ -357,13 +423,13 @@ function animate() {
 }
 
 // ======================================
-// START GAME
+// START
 // ======================================
 
 animate();
 
 // ======================================
-// WINDOW RESIZE
+// RESIZE
 // ======================================
 
 window.addEventListener(
