@@ -1,41 +1,33 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
-import { buildingList } from "./buildings.js";
 
-const names = [
-    "Daniel",
-    "Michael",
-    "Sarah",
-    "Emma",
-    "David",
-    "Sophia",
-    "James",
-    "Olivia",
-    "Noah",
-    "Mia",
-    "Ethan",
-    "Grace",
-    "Lucas",
-    "Ava",
-    "Mason",
-    "Lily",
-    "Ethan",
-    "Chloe",
-    "Leo",
-    "Amelia"
+const npcData = [
+    { name: "Daniel", job: "Teacher", city: "Blingz City" },
+    { name: "Sarah", job: "Doctor", city: "Central City" },
+    { name: "Michael", job: "Police Officer", city: "Blingz City" },
+    { name: "Emma", job: "Shop Worker", city: "Central City" },
+    { name: "David", job: "Mechanic", city: "Blingz City" },
+    { name: "Sophia", job: "Engineer", city: "Central City" },
+    { name: "James", job: "Taxi Driver", city: "Blingz City" },
+    { name: "Olivia", job: "Teacher", city: "Central City" },
+    { name: "Noah", job: "Student", city: "Blingz City" },
+    { name: "Mia", job: "Shop Worker", city: "Central City" },
+    { name: "Ethan", job: "Engineer", city: "Blingz City" },
+    { name: "Grace", job: "Doctor", city: "Central City" },
+    { name: "Lucas", job: "Mechanic", city: "Blingz City" },
+    { name: "Ava", job: "Police Officer", city: "Central City" },
+    { name: "Mason", job: "Taxi Driver", city: "Blingz City" },
+    { name: "Lily", job: "Student", city: "Central City" }
 ];
 
 export function createNPCs(scene) {
 
     const npcs = [];
 
-    for (let i = 0; i < names.length; i++) {
+    for (const data of npcData) {
 
         const npc = new THREE.Group();
 
-        // =================================
         // BODY
-        // =================================
-
         const body = new THREE.Mesh(
             new THREE.CapsuleGeometry(
                 0.35,
@@ -53,13 +45,9 @@ export function createNPCs(scene) {
         );
 
         body.position.y = 1.3;
-
         npc.add(body);
 
-        // =================================
         // HEAD
-        // =================================
-
         const head = new THREE.Mesh(
             new THREE.SphereGeometry(
                 0.38,
@@ -72,13 +60,9 @@ export function createNPCs(scene) {
         );
 
         head.position.y = 2.3;
-
         npc.add(head);
 
-        // =================================
         // ARMS
-        // =================================
-
         const armMaterial =
             new THREE.MeshStandardMaterial({
                 color: 0xdddddd
@@ -102,17 +86,11 @@ export function createNPCs(scene) {
 
         npc.add(leftArm);
 
-        const rightArm =
-            leftArm.clone();
-
+        const rightArm = leftArm.clone();
         rightArm.position.x = 0.48;
-
         npc.add(rightArm);
 
-        // =================================
         // LEGS
-        // =================================
-
         const legMaterial =
             new THREE.MeshStandardMaterial({
                 color: 0x222222
@@ -136,59 +114,62 @@ export function createNPCs(scene) {
 
         npc.add(leftLeg);
 
-        const rightLeg =
-            leftLeg.clone();
-
+        const rightLeg = leftLeg.clone();
         rightLeg.position.x = 0.2;
-
         npc.add(rightLeg);
 
-        // =================================
-        // POSITION
-        // =================================
+        // CITY START POSITION
+        let startX;
+        let startZ;
+
+        if (data.city === "Blingz City") {
+            startX = -100 + Math.random() * 160;
+            startZ = -120 + Math.random() * 240;
+        } else {
+            startX = 260 + Math.random() * 160;
+            startZ = -120 + Math.random() * 240;
+        }
 
         npc.position.set(
-            (Math.random() - 0.5) * 420,
+            startX,
             0,
-            (Math.random() - 0.5) * 420
+            startZ
         );
 
         scene.add(npc);
-
-        // Pick building
-        const targetBuilding =
-            buildingList.length > 0
-                ? buildingList[
-                    Math.floor(
-                        Math.random() *
-                        buildingList.length
-                    )
-                ]
-                : null;
 
         npcs.push({
 
             object: npc,
 
-            name: names[i],
+            name: data.name,
+
+            job: data.job,
+
+            homeCity: data.city,
+
+            currentCity: data.city,
+
+            state: "goingToWork",
+
+            speed:
+                0.02 +
+                Math.random() * 0.02,
 
             direction:
                 Math.random() *
                 Math.PI *
                 2,
 
-            speed:
-                0.02 +
-                Math.random() *
-                0.02,
+            workTimer:
+                600 +
+                Math.random() * 600,
 
-            state: "walking",
+            travelTimer: 0,
 
-            targetBuilding,
+            workplace: null,
 
-            insideTimer: 0,
-
-            reactionTimer: 0
+            destinationCity: null
         });
     }
 
