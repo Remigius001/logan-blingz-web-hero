@@ -1,3 +1,15 @@
+export const missionTypes = [
+    "villain",
+    "hero_rescue",
+    "hero_battle",
+    "protect",
+    "rescue",
+    "search",
+    "chase",
+    "emergency",
+    "team_up"
+];
+
 const villainNames = [
     "Shadow King",
     "Iron Fang",
@@ -18,201 +30,171 @@ const cities = [
     "Central City"
 ];
 
-const missionTemplates = [
-    {
-        type: "villain",
-        title: "Villain Attack",
-        objective: villain => `Stop ${villain}.`
-    },
-    {
-        type: "hero_rescue",
-        title: "Hero Rescue",
-        objective: hero => `Rescue ${hero} from the enemy.`
-    },
-    {
-        type: "hero_battle",
-        title: "Hero Battle",
-        objective: hero => `Help ${hero} fight the villain.`
-    },
-    {
-        type: "protect",
-        title: "Protect the City",
-        objective: () => "Protect civilians and keep the area safe."
-    },
-    {
-        type: "rescue",
-        title: "Civilian Rescue",
-        objective: () => "Rescue civilians and guide them to safety."
-    },
-    {
-        type: "search",
-        title: "Search Mission",
-        objective: () => "Search the area and find the target."
-    },
-    {
-        type: "chase",
-        title: "City Chase",
-        objective: () => "Chase the target across the city."
-    },
-    {
-        type: "emergency",
-        title: "Emergency Response",
-        objective: () => "Respond to the emergency and secure the area."
-    },
-    {
-        type: "team",
-        title: "Hero Team-Up",
-        objective: hero => `Team up with ${hero} and stop the threat.`
-    }
+const locations = [
+    "Downtown",
+    "School",
+    "Hospital",
+    "Police Station",
+    "Park",
+    "Highway",
+    "Bank",
+    "Train Station",
+    "Harbor",
+    "Warehouse",
+    "Logan Base"
 ];
 
-let generatedMissionNumber = 0;
+let missionNumber = 0;
+
+function randomItem(array) {
+    return array[
+        Math.floor(
+            Math.random() * array.length
+        )
+    ];
+}
 
 export function createRandomMission() {
 
-    generatedMissionNumber++;
+    missionNumber++;
 
-    const template =
-        missionTemplates[
-            Math.floor(
-                Math.random() *
-                missionTemplates.length
-            )
-        ];
+    const type = randomItem(missionTypes);
+    const city = randomItem(cities);
+    const location = randomItem(locations);
+    const villain = randomItem(villainNames);
+    const hero = randomItem(heroNames);
 
-    const city =
-        cities[
-            Math.floor(
-                Math.random() *
-                cities.length
-            )
-        ];
+    const reward =
+        300 +
+        Math.floor(Math.random() * 1700);
 
-    const villain =
-        villainNames[
-            Math.floor(
-                Math.random() *
-                villainNames.length
-            )
-        ];
-
-    const hero =
-        heroNames[
-            Math.floor(
-                Math.random() *
-                heroNames.length
-            )
-        ];
-
-    let objective =
-        template.objective();
-
-    let mission = {
-
-        id: generatedMissionNumber,
-
-        title: template.title,
-
-        type: template.type,
-
-        city: city,
-
-        objective: objective,
-
-        reward:
-            300 +
-            Math.floor(
-                Math.random() * 1200
-            ),
-
+    const mission = {
+        id: missionNumber,
+        type,
+        city,
+        location,
         villain: null,
-
         hero: null,
-
-        timestamp: Date.now()
+        objective: "",
+        reward,
+        title: ""
     };
 
-    // ==================================
-    // VILLAIN MISSION
-    // ==================================
+    switch (type) {
 
-    if (
-        template.type === "villain"
-    ) {
+        case "villain":
 
-        mission.villain =
-            villain;
+            mission.villain = villain;
 
-        mission.objective =
-            template.objective(
-                villain
-            );
-    }
+            mission.title =
+                `${villain} Attack`;
 
-    // ==================================
-    // HERO RESCUE
-    // ==================================
+            mission.objective =
+                `Stop ${villain} in ${city}.`;
 
-    if (
-        template.type === "hero_rescue"
-    ) {
+            break;
 
-        mission.hero =
-            hero;
+        case "hero_rescue":
 
-        mission.villain =
-            villain;
+            mission.hero = hero;
+            mission.villain = villain;
 
-        mission.objective =
-            template.objective(
-                hero
-            );
-    }
+            mission.title =
+                `Rescue ${hero}`;
 
-    // ==================================
-    // HERO BATTLE
-    // ==================================
+            mission.objective =
+                `Rescue ${hero} from ${villain} at ${location}.`;
 
-    if (
-        template.type === "hero_battle"
-    ) {
+            break;
 
-        mission.hero =
-            hero;
+        case "hero_battle":
 
-        mission.villain =
-            villain;
+            mission.hero = hero;
+            mission.villain = villain;
 
-        mission.objective =
-            template.objective(
-                hero
-            );
-    }
+            mission.title =
+                `${hero} Needs Backup`;
 
-    // ==================================
-    // TEAM MISSION
-    // ==================================
+            mission.objective =
+                `Help ${hero} fight ${villain}.`;
 
-    if (
-        template.type === "team"
-    ) {
+            break;
 
-        mission.hero =
-            hero;
+        case "protect":
 
-        mission.villain =
-            villain;
+            mission.title =
+                `Protect ${location}`;
 
-        mission.objective =
-            template.objective(
-                hero
-            );
+            mission.objective =
+                `Protect civilians at the ${location}.`;
+
+            break;
+
+        case "rescue":
+
+            mission.title =
+                `Rescue Operation`;
+
+            mission.objective =
+                `Rescue civilians near the ${location}.`;
+
+            break;
+
+        case "search":
+
+            mission.title =
+                `Search ${location}`;
+
+            mission.objective =
+                `Search the ${location} and find the target.`;
+
+            break;
+
+        case "chase":
+
+            mission.title =
+                `City Chase`;
+
+            mission.objective =
+                `Chase the target through ${city}.`;
+
+            break;
+
+        case "emergency":
+
+            mission.title =
+                `Emergency Response`;
+
+            mission.objective =
+                `Respond to the emergency at the ${location}.`;
+
+            break;
+
+        case "team_up":
+
+            mission.hero = hero;
+            mission.villain = villain;
+
+            mission.title =
+                `${hero} Team-Up`;
+
+            mission.objective =
+                `Team up with ${hero} and stop ${villain}.`;
+
+            break;
+
+        default:
+
+            mission.title =
+                "City Patrol";
+
+            mission.objective =
+                `Patrol ${city}.`;
     }
 
     return mission;
 }
 
 export function getMissionNumber() {
-
-    return generatedMissionNumber;
+    return missionNumber;
 }
