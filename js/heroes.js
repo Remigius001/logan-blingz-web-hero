@@ -10,11 +10,13 @@ export class Hero {
         this.maxHealth = 100;
         this.health = 100;
 
-        this.speed = 0.10;
+        this.maxEnergy = 100;
         this.energy = 100;
 
-        this.defeated = false;
+        this.speed = 0.10;
+
         this.injured = false;
+        this.defeated = false;
 
         this.group = new THREE.Group();
 
@@ -27,7 +29,7 @@ export class Hero {
                 16
             ),
             new THREE.MeshStandardMaterial({
-                color: color
+                color
             })
         );
 
@@ -49,10 +51,10 @@ export class Hero {
         head.position.y = 2.45;
         this.group.add(head);
 
-        // ARMS
+        // LEFT ARM
         const armMaterial =
             new THREE.MeshStandardMaterial({
-                color: color
+                color
             });
 
         const leftArm = new THREE.Mesh(
@@ -73,13 +75,14 @@ export class Hero {
 
         this.group.add(leftArm);
 
+        // RIGHT ARM
         const rightArm = leftArm.clone();
 
         rightArm.position.x = 0.52;
 
         this.group.add(rightArm);
 
-        // LEGS
+        // LEFT LEG
         const legMaterial =
             new THREE.MeshStandardMaterial({
                 color: 0x222222
@@ -103,6 +106,7 @@ export class Hero {
 
         this.group.add(leftLeg);
 
+        // RIGHT LEG
         const rightLeg = leftLeg.clone();
 
         rightLeg.position.x = 0.2;
@@ -130,19 +134,17 @@ export class Hero {
             this.health = 0;
         }
 
-        // Non-graphic injury state
         if (this.health <= 50) {
             this.injured = true;
-            this.group.rotation.z = 0.05;
+            this.group.rotation.z = 0.08;
         }
 
-        // Defeated
-        if (this.health <= 0) {
+        if (this.health === 0) {
 
             this.defeated = true;
             this.injured = true;
 
-            this.group.rotation.x = -0.5;
+            this.group.rotation.x = -0.45;
 
             console.log(
                 `${this.name} has been defeated.`
@@ -168,35 +170,36 @@ export class Hero {
         }
     }
 
-    attack(target) {
+    attack(target, damage = 20) {
 
         if (
             this.defeated ||
             target.defeated
         ) {
-            return;
+            return false;
         }
 
         if (this.energy < 10) {
-            return;
+            return false;
         }
 
         this.energy -= 10;
 
-        target.takeDamage(20);
+        target.takeDamage(damage);
 
-        console.log(
-            `${this.name} attacked ${target.name}.`
-        );
+        return true;
     }
 
     update() {
 
-        // Slowly restore energy
-        this.energy += 0.2;
+        if (this.defeated) {
+            return;
+        }
 
-        if (this.energy > 100) {
-            this.energy = 100;
+        this.energy += 0.25;
+
+        if (this.energy > this.maxEnergy) {
+            this.energy = this.maxEnergy;
         }
     }
 }
