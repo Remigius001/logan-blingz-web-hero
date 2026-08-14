@@ -58,6 +58,7 @@ body {
 #hero-health,
 #villain-health,
 #identity,
+#money,
 #mission {
 
     position: fixed;
@@ -73,7 +74,7 @@ body {
 
     color: white;
 
-    font-size: 18px;
+    font-size: 17px;
 
     font-weight: bold;
 
@@ -82,7 +83,7 @@ body {
             0,
             0,
             0,
-            0.65
+            0.68
         );
 
     border:
@@ -118,11 +119,15 @@ body {
     top: 235px;
 }
 
+#money {
+    top: 285px;
+}
+
 #mission {
 
-    top: 285px;
+    top: 335px;
 
-    max-width: 380px;
+    max-width: 400px;
 
     line-height: 1.4;
 }
@@ -157,15 +162,6 @@ body {
         3px solid white;
 
     border-radius: 12px;
-
-    box-shadow:
-        0 0 15px
-        rgba(
-            0,
-            0,
-            0,
-            0.7
-        );
 }
 
 #minimap {
@@ -291,7 +287,7 @@ body {
 }
 
 /* =====================================
-   SMALL SCREEN
+   MOBILE
    ===================================== */
 
 @media (max-width: 700px) {
@@ -307,13 +303,14 @@ body {
     #hero-health,
     #villain-health,
     #identity,
+    #money,
     #mission {
 
         left: 10px;
 
         min-width: 170px;
 
-        font-size: 13px;
+        font-size: 12px;
 
         padding:
             8px 10px;
@@ -335,8 +332,12 @@ body {
         top: 194px;
     }
 
-    #mission {
+    #money {
         top: 237px;
+    }
+
+    #mission {
+        top: 280px;
         max-width: 230px;
     }
 
