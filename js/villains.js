@@ -9,7 +9,6 @@ export class Villain {
         z,
         color = 0x5511aa
     ) {
-
         this.scene = scene;
         this.name = name;
 
@@ -23,10 +22,11 @@ export class Villain {
         this.injured = false;
 
         this.attackCooldown = 0;
+        this.speed = 0.03;
 
         this.group = new THREE.Group();
 
-        // BODY
+        // Body
         const body = new THREE.Mesh(
             new THREE.CapsuleGeometry(
                 0.45,
@@ -35,15 +35,14 @@ export class Villain {
                 16
             ),
             new THREE.MeshStandardMaterial({
-                color
+                color: color
             })
         );
 
         body.position.y = 1.45;
-
         this.group.add(body);
 
-        // HEAD
+        // Head
         const head = new THREE.Mesh(
             new THREE.SphereGeometry(
                 0.43,
@@ -56,13 +55,12 @@ export class Villain {
         );
 
         head.position.y = 2.5;
-
         this.group.add(head);
 
-        // LEFT ARM
+        // Arms
         const armMaterial =
             new THREE.MeshStandardMaterial({
-                color
+                color: color
             });
 
         const leftArm = new THREE.Mesh(
@@ -83,14 +81,11 @@ export class Villain {
 
         this.group.add(leftArm);
 
-        // RIGHT ARM
         const rightArm = leftArm.clone();
-
         rightArm.position.x = 0.55;
-
         this.group.add(rightArm);
 
-        // LEFT LEG
+        // Legs
         const legMaterial =
             new THREE.MeshStandardMaterial({
                 color: 0x111111
@@ -114,11 +109,8 @@ export class Villain {
 
         this.group.add(leftLeg);
 
-        // RIGHT LEG
         const rightLeg = leftLeg.clone();
-
         rightLeg.position.x = 0.22;
-
         this.group.add(rightLeg);
 
         this.group.position.set(
@@ -130,6 +122,59 @@ export class Villain {
         scene.add(this.group);
     }
 
+    moveToward(target) {
+
+        if (
+            this.defeated ||
+            !target
+        ) {
+            return;
+        }
+
+        const dx =
+            target.x -
+            this.group.position.x;
+
+        const dz =
+            target.z -
+            this.group.position.z;
+
+        const distance =
+            Math.sqrt(
+                dx * dx +
+                dz * dz
+            );
+
+        if (distance < 0.15) {
+            return;
+        }
+
+        const directionX =
+            dx / distance;
+
+        const directionZ =
+            dz / distance;
+
+        this.group.position.x +=
+            directionX * this.speed;
+
+        this.group.position.z +=
+            directionZ * this.speed;
+
+        const targetRotation =
+            Math.atan2(
+                directionX,
+                directionZ
+            );
+
+        this.group.rotation.y =
+            THREE.MathUtils.lerp(
+                this.group.rotation.y,
+                targetRotation,
+                0.12
+            );
+    }
+
     takeDamage(amount) {
 
         if (this.defeated) {
@@ -138,24 +183,19 @@ export class Villain {
 
         this.health -= amount;
 
-        if (this.health < 0) {
-            this.health = 0;
-        }
+        this.health =
+            Math.max(
+                0,
+                this.health
+            );
 
         if (this.health <= 60) {
             this.injured = true;
-            this.group.rotation.z = -0.08;
         }
 
         if (this.health === 0) {
-
             this.defeated = true;
-
             this.group.rotation.x = -0.45;
-
-            console.log(
-                `${this.name} has been defeated.`
-            );
         }
     }
 
@@ -163,6 +203,7 @@ export class Villain {
 
         if (
             this.defeated ||
+            !target ||
             target.defeated
         ) {
             return false;
@@ -191,8 +232,10 @@ export class Villain {
 
         this.energy += 0.2;
 
-        if (this.energy > this.maxEnergy) {
-            this.energy = this.maxEnergy;
-        }
+        this.energy =
+            Math.min(
+                this.maxEnergy,
+                this.energy
+            );
     }
 }
