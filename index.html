@@ -11,10 +11,7 @@
 
     <title>LOGAN BLINGZ</title>
 
-    <link
-        rel="stylesheet"
-        href="./style.css"
-    >
+    <link rel="stylesheet" href="./style.css">
 
     <script type="importmap">
     {
@@ -27,12 +24,10 @@
 
 <body>
 
-    <!-- GAME TITLE -->
     <div id="title">
         LOGAN BLINGZ
     </div>
 
-    <!-- HEALTH -->
     <div id="health">
         Logan Health: 100
     </div>
@@ -45,14 +40,23 @@
         Shadow King Health: 120
     </div>
 
-    <!-- IDENTITY -->
     <div id="identity">
-        Identity: Logan
+        Identity: Logan (Student)
+    </div>
+
+    <!-- MINIMAP -->
+
+    <div id="minimap-container">
+        <canvas
+            id="minimap"
+            width="220"
+            height="220"
+        ></canvas>
     </div>
 
     <!-- CONTROLS -->
-    <div id="controls">
 
+    <div id="controls">
         <div>W A S D — Move</div>
         <div>SHIFT — Run</div>
         <div>SPACE — Jump</div>
@@ -61,10 +65,8 @@
         <div>M — Start Mission</div>
         <div>F — Logan Attack</div>
         <div>G — Skyblade Attack</div>
-
     </div>
 
-    <!-- GAME -->
     <script
         type="module"
         src="./js/game.js"
