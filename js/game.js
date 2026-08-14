@@ -6,7 +6,11 @@ import { createNPCs } from "./npcs.js";
 import { Vehicle } from "./vehicles.js";
 import { Hero } from "./heroes.js";
 import { Villain } from "./villains.js";
-import { attack, isDefeated } from "./combat.js";
+import { IdentitySystem } from "./identity.js";
+import {
+    attack,
+    isDefeated
+} from "./combat.js";
 
 // ======================================
 // SCENE
@@ -14,28 +18,36 @@ import { attack, isDefeated } from "./combat.js";
 
 const scene = new THREE.Scene();
 
-scene.background = new THREE.Color(0x87ceeb);
+scene.background =
+    new THREE.Color(0x87ceeb);
 
 // ======================================
 // CAMERA
 // ======================================
 
-const camera = new THREE.PerspectiveCamera(
-    70,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    2000
-);
+const camera =
+    new THREE.PerspectiveCamera(
+        70,
+        window.innerWidth /
+        window.innerHeight,
+        0.1,
+        2000
+    );
 
-camera.position.set(0, 5, 10);
+camera.position.set(
+    0,
+    5,
+    10
+);
 
 // ======================================
 // RENDERER
 // ======================================
 
-const renderer = new THREE.WebGLRenderer({
-    antialias: true
-});
+const renderer =
+    new THREE.WebGLRenderer({
+        antialias: true
+    });
 
 renderer.setSize(
     window.innerWidth,
@@ -43,21 +55,27 @@ renderer.setSize(
 );
 
 renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio, 2)
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
 );
 
 renderer.shadowMap.enabled = true;
 
-document.body.appendChild(renderer.domElement);
+document.body.appendChild(
+    renderer.domElement
+);
 
 // ======================================
 // LIGHTING
 // ======================================
 
-const sunlight = new THREE.DirectionalLight(
-    0xffffff,
-    4
-);
+const sunlight =
+    new THREE.DirectionalLight(
+        0xffffff,
+        4
+    );
 
 sunlight.position.set(
     100,
@@ -86,66 +104,80 @@ createCity(scene);
 // PLAYER
 // ======================================
 
-const player = new Player(scene);
+const player =
+    new Player(scene);
 
 if (typeof player.health !== "number") {
     player.health = 100;
 }
 
 // ======================================
+// IDENTITY
+// ======================================
+
+const identity =
+    new IdentitySystem(player);
+
+// ======================================
 // NPCS
 // ======================================
 
-const npcs = createNPCs(scene);
+const npcs =
+    createNPCs(scene);
 
 // ======================================
 // HERO
 // ======================================
 
-const skyblade = new Hero(
-    scene,
-    "Skyblade",
-    8,
-    4,
-    0x3366ff
-);
+const skyblade =
+    new Hero(
+        scene,
+        "Skyblade",
+        8,
+        4,
+        0x3366ff
+    );
 
 // ======================================
 // VILLAIN
 // ======================================
 
-const shadowKing = new Villain(
-    scene,
-    "Shadow King",
-    18,
-    0,
-    0x5a1688
-);
+const shadowKing =
+    new Villain(
+        scene,
+        "Shadow King",
+        18,
+        0,
+        0x5a1688
+    );
 
 // ======================================
 // VEHICLES
 // ======================================
 
-const car = new Vehicle(
-    scene,
-    "car",
-    5,
-    0
-);
+const car =
+    new Vehicle(
+        scene,
+        "car",
+        5,
+        0
+    );
 
-const bike = new Vehicle(
-    scene,
-    "bike",
-    12,
-    0
-);
+const bike =
+    new Vehicle(
+        scene,
+        "bike",
+        12,
+        0
+    );
 
-const jet = new Vehicle(
-    scene,
-    "jet",
-    20,
-    0
-);
+const jet =
+    new Vehicle(
+        scene,
+        "jet",
+        20,
+        0
+    );
 
 const vehicles = [
     car,
@@ -168,138 +200,170 @@ let missionComplete = false;
 
 const keys = {};
 
-window.addEventListener("keydown", (event) => {
+window.addEventListener(
+    "keydown",
+    (event) => {
 
-    const key = event.key.toLowerCase();
+        const key =
+            event.key.toLowerCase();
 
-    keys[key] = true;
+        keys[key] = true;
 
-    // ==================================
-    // ENTER / EXIT VEHICLE
-    // ==================================
+        // ==================================
+        // CHANGE IDENTITY
+        // ==================================
 
-    if (key === "e") {
+        if (key === "i") {
 
-        if (currentVehicle) {
+            if (!currentVehicle) {
 
-            currentVehicle.exit();
+                identity.toggleIdentity();
 
-            player.group.visible = true;
+                updateIdentityUI();
 
-            player.group.position.copy(
-                currentVehicle.group.position
-            );
-
-            player.group.position.x += 3;
-
-            currentVehicle = null;
-
-            return;
-        }
-
-        let nearestVehicle = null;
-        let nearestDistance = Infinity;
-
-        for (const vehicle of vehicles) {
-
-            const distance =
-                player.group.position.distanceTo(
-                    vehicle.group.position
+                console.log(
+                    "Current identity:",
+                    identity.getName()
                 );
-
-            if (
-                distance < 6 &&
-                distance < nearestDistance
-            ) {
-
-                nearestDistance = distance;
-                nearestVehicle = vehicle;
             }
         }
 
-        if (nearestVehicle) {
+        // ==================================
+        // ENTER / EXIT VEHICLE
+        // ==================================
 
-            currentVehicle = nearestVehicle;
+        if (key === "e") {
 
-            currentVehicle.enter();
+            if (currentVehicle) {
 
-            player.group.visible = false;
+                currentVehicle.exit();
+
+                player.group.visible =
+                    true;
+
+                player.group.position.copy(
+                    currentVehicle.group.position
+                );
+
+                player.group.position.x += 3;
+
+                currentVehicle = null;
+
+                return;
+            }
+
+            let nearestVehicle = null;
+            let nearestDistance = Infinity;
+
+            for (
+                const vehicle of vehicles
+            ) {
+
+                const distance =
+                    player.group.position.distanceTo(
+                        vehicle.group.position
+                    );
+
+                if (
+                    distance < 6 &&
+                    distance < nearestDistance
+                ) {
+
+                    nearestDistance =
+                        distance;
+
+                    nearestVehicle =
+                        vehicle;
+                }
+            }
+
+            if (nearestVehicle) {
+
+                currentVehicle =
+                    nearestVehicle;
+
+                currentVehicle.enter();
+
+                player.group.visible =
+                    false;
+            }
         }
-    }
 
-    // ==================================
-    // M = START MISSION
-    // ==================================
+        // ==================================
+        // START MISSION
+        // ==================================
 
-    if (key === "m") {
+        if (key === "m") {
 
-        missionActive = true;
-        missionComplete = false;
+            missionActive = true;
+            missionComplete = false;
 
-        shadowKing.defeated = false;
-        shadowKing.health = shadowKing.maxHealth;
-        shadowKing.group.visible = true;
+            shadowKing.defeated = false;
+            shadowKing.health =
+                shadowKing.maxHealth;
 
-        console.log(
-            "MISSION STARTED: Stop Shadow King!"
-        );
-    }
-
-    // ==================================
-    // F = LOGAN ATTACK
-    // ==================================
-
-    if (key === "f") {
-
-        const distance =
-            player.group.position.distanceTo(
-                shadowKing.group.position
-            );
-
-        if (
-            distance < 8 &&
-            !isDefeated(shadowKing)
-        ) {
-
-            shadowKing.takeDamage(20);
+            shadowKing.group.visible = true;
 
             console.log(
-                "Logan attacked Shadow King."
+                "MISSION STARTED: Stop Shadow King!"
             );
         }
-    }
 
-    // ==================================
-    // G = SKYBLADE ATTACK
-    // ==================================
+        // ==================================
+        // LOGAN ATTACK
+        // ==================================
 
-    if (key === "g") {
+        if (key === "f") {
 
-        const distance =
-            skyblade.group.position.distanceTo(
-                shadowKing.group.position
-            );
+            const distance =
+                player.group.position.distanceTo(
+                    shadowKing.group.position
+                );
 
-        if (
-            distance < 10 &&
-            !isDefeated(shadowKing)
-        ) {
+            if (
+                distance < 8 &&
+                !isDefeated(shadowKing)
+            ) {
 
-            attack(
-                skyblade,
-                shadowKing,
-                25
-            );
+                shadowKing.takeDamage(20);
+            }
+        }
+
+        // ==================================
+        // SKYBLADE ATTACK
+        // ==================================
+
+        if (key === "g") {
+
+            const distance =
+                skyblade.group.position.distanceTo(
+                    shadowKing.group.position
+                );
+
+            if (
+                distance < 10 &&
+                !isDefeated(shadowKing)
+            ) {
+
+                attack(
+                    skyblade,
+                    shadowKing,
+                    25
+                );
+            }
         }
     }
+);
 
-});
+window.addEventListener(
+    "keyup",
+    (event) => {
 
-window.addEventListener("keyup", (event) => {
-
-    keys[event.key.toLowerCase()] = false;
-
-});
+        keys[
+            event.key.toLowerCase()
+        ] = false;
+    }
+);
 
 // ======================================
 // NPC MOVEMENT
@@ -314,14 +378,20 @@ function updateNPCs() {
         }
 
         npc.object.position.x +=
-            Math.cos(npc.direction) *
+            Math.cos(
+                npc.direction
+            ) *
             npc.speed;
 
         npc.object.position.z +=
-            Math.sin(npc.direction) *
+            Math.sin(
+                npc.direction
+            ) *
             npc.speed;
 
-        if (Math.random() < 0.003) {
+        if (
+            Math.random() < 0.003
+        ) {
 
             npc.direction =
                 Math.random() *
@@ -353,14 +423,21 @@ function updateNPCJobs() {
 
     for (const npc of npcs) {
 
-        if (npc.state === "working") {
+        if (
+            npc.state === "working"
+        ) {
 
             npc.workTimer--;
 
-            if (npc.workTimer <= 0) {
+            if (
+                npc.workTimer <= 0
+            ) {
 
-                npc.state = "goingToWork";
-                npc.object.visible = true;
+                npc.state =
+                    "goingToWork";
+
+                npc.object.visible =
+                    true;
 
                 npc.workTimer =
                     600 +
@@ -377,7 +454,10 @@ function updateNPCJobs() {
 function updateVehicles() {
 
     if (currentVehicle) {
-        currentVehicle.update(keys);
+
+        currentVehicle.update(
+            keys
+        );
     }
 }
 
@@ -389,7 +469,9 @@ function updateSkyblade() {
 
     skyblade.update();
 
-    if (skyblade.defeated) {
+    if (
+        skyblade.defeated
+    ) {
         return;
     }
 
@@ -400,18 +482,20 @@ function updateSkyblade() {
         player.group.position.z + 3;
 
     skyblade.group.position.x +=
-        (targetX -
-            skyblade.group.position.x) *
-        0.02;
+        (
+            targetX -
+            skyblade.group.position.x
+        ) * 0.02;
 
     skyblade.group.position.z +=
-        (targetZ -
-            skyblade.group.position.z) *
-        0.02;
+        (
+            targetZ -
+            skyblade.group.position.z
+        ) * 0.02;
 }
 
 // ======================================
-// SHADOW KING AI
+// SHADOW KING
 // ======================================
 
 function updateShadowKing() {
@@ -456,29 +540,26 @@ function updateShadowKing() {
         }
     }
 
-    if (distance < 5) {
+    if (
+        distance < 5 &&
+        shadowKing.attackCooldown <= 0
+    ) {
+
+        player.health -= 5;
 
         if (
-            shadowKing.attackCooldown <= 0
+            player.health < 0
         ) {
-
-            player.health -= 5;
-
-            if (player.health < 0) {
-                player.health = 0;
-            }
-
-            shadowKing.attackCooldown = 120;
-
-            console.log(
-                "Logan took damage."
-            );
+            player.health = 0;
         }
+
+        shadowKing.attackCooldown =
+            120;
     }
 }
 
 // ======================================
-// MISSION COMPLETION
+// MISSION
 // ======================================
 
 function updateMission() {
@@ -489,8 +570,8 @@ function updateMission() {
         !missionComplete
     ) {
 
-        missionComplete = true;
         missionActive = false;
+        missionComplete = true;
 
         console.log(
             "MISSION COMPLETE!"
@@ -499,19 +580,47 @@ function updateMission() {
 }
 
 // ======================================
-// HEALTH DISPLAY
+// IDENTITY UI
+// ======================================
+
+function updateIdentityUI() {
+
+    const element =
+        document.getElementById(
+            "identity"
+        );
+
+    if (!element) {
+        return;
+    }
+
+    const current =
+        identity.getCurrentIdentity();
+
+    element.textContent =
+        `Identity: ${current.name} (${current.role})`;
+}
+
+// ======================================
+// HEALTH UI
 // ======================================
 
 function updateHealthUI() {
 
     const healthElement =
-        document.getElementById("health");
+        document.getElementById(
+            "health"
+        );
 
     const heroHealthElement =
-        document.getElementById("hero-health");
+        document.getElementById(
+            "hero-health"
+        );
 
     const villainHealthElement =
-        document.getElementById("villain-health");
+        document.getElementById(
+            "villain-health"
+        );
 
     if (healthElement) {
 
@@ -578,10 +687,15 @@ function updateCamera() {
 
 function animate() {
 
-    requestAnimationFrame(animate);
+    requestAnimationFrame(
+        animate
+    );
 
     if (!currentVehicle) {
-        player.update(keys);
+
+        player.update(
+            keys
+        );
     }
 
     updateNPCJobs();
@@ -590,6 +704,7 @@ function animate() {
     updateSkyblade();
     updateShadowKing();
     updateMission();
+    updateIdentityUI();
     updateHealthUI();
     updateCamera();
 
@@ -599,27 +714,25 @@ function animate() {
     );
 }
 
-// ======================================
-// START GAME
-// ======================================
-
 animate();
 
 // ======================================
 // RESIZE
 // ======================================
 
-window.addEventListener("resize", () => {
+window.addEventListener(
+    "resize",
+    () => {
 
-    camera.aspect =
-        window.innerWidth /
-        window.innerHeight;
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
 
-    camera.updateProjectionMatrix();
+        camera.updateProjectionMatrix();
 
-    renderer.setSize(
-        window.innerWidth,
-        window.innerHeight
-    );
-
-});
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
+    }
+);
