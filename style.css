@@ -2,39 +2,29 @@ html,
 body {
     margin: 0;
     padding: 0;
-
     width: 100%;
     height: 100%;
-
     overflow: hidden;
-
     font-family: Arial, Helvetica, sans-serif;
-
     background: #87ceeb;
 }
 
-canvas {
+#gameCanvas {
     display: block;
-
     width: 100%;
     height: 100%;
 }
 
 #title {
     position: fixed;
-
     top: 18px;
     left: 50%;
-
     transform: translateX(-50%);
-
     z-index: 100;
 
     color: white;
-
     font-size: 42px;
     font-weight: 900;
-
     letter-spacing: 5px;
 
     text-shadow:
@@ -50,29 +40,21 @@ canvas {
 #villain-health,
 #identity {
     position: fixed;
-
     left: 20px;
-
     z-index: 100;
 
     min-width: 210px;
-
     padding: 10px 15px;
 
     color: white;
-
     font-size: 18px;
     font-weight: bold;
 
     background: rgba(0, 0, 0, 0.65);
-
-    border: 2px solid
-        rgba(255, 255, 255, 0.4);
-
+    border: 2px solid rgba(255, 255, 255, 0.4);
     border-radius: 8px;
 
     text-shadow: 1px 1px 2px black;
-
     pointer-events: none;
 }
 
@@ -94,29 +76,22 @@ canvas {
 
 #controls {
     position: fixed;
-
     right: 20px;
     bottom: 20px;
-
     z-index: 100;
 
     padding: 15px 18px;
 
     color: white;
-
     background: rgba(0, 0, 0, 0.7);
 
-    border: 2px solid
-        rgba(255, 255, 255, 0.35);
-
+    border: 2px solid rgba(255, 255, 255, 0.35);
     border-radius: 10px;
 
     font-size: 14px;
-
     line-height: 1.8;
 
     text-shadow: 1px 1px 2px black;
-
     pointer-events: none;
 }
 
@@ -126,25 +101,21 @@ canvas {
 
 #minimap-container {
     position: fixed;
-
     top: 20px;
     right: 20px;
-
-    z-index: 100;
 
     width: 220px;
     height: 220px;
 
+    z-index: 200;
+
     padding: 5px;
 
-    background: rgba(0, 0, 0, 0.8);
-
+    background: #111;
     border: 3px solid white;
-
     border-radius: 12px;
 
-    box-shadow:
-        0 0 15px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
 }
 
 #minimap {
@@ -153,6 +124,7 @@ canvas {
     width: 220px;
     height: 220px;
 
+    background: #263238;
     border-radius: 8px;
 }
 
@@ -168,11 +140,8 @@ canvas {
     #villain-health,
     #identity {
         left: 10px;
-
         min-width: 170px;
-
         font-size: 14px;
-
         padding: 8px 10px;
     }
 
@@ -195,18 +164,14 @@ canvas {
     #controls {
         right: 10px;
         bottom: 10px;
-
         font-size: 11px;
-
         line-height: 1.5;
-
         padding: 10px;
     }
 
     #minimap-container {
         width: 150px;
         height: 150px;
-
         top: 10px;
         right: 10px;
     }
