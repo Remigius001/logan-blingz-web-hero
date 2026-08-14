@@ -21,18 +21,12 @@ export class IdentitySystem {
 
     getCurrentIdentity() {
 
-        if (this.isHero) {
-            return this.heroIdentity;
-        }
-
-        return this.normalIdentity;
+        return this.isHero
+            ? this.heroIdentity
+            : this.normalIdentity;
     }
 
     transformToHero() {
-
-        if (this.isHero) {
-            return;
-        }
 
         this.isHero = true;
 
@@ -42,10 +36,6 @@ export class IdentitySystem {
     }
 
     transformToNormal() {
-
-        if (!this.isHero) {
-            return;
-        }
 
         this.isHero = false;
 
@@ -64,17 +54,14 @@ export class IdentitySystem {
     }
 
     getName() {
-
         return this.getCurrentIdentity().name;
     }
 
     getRole() {
-
         return this.getCurrentIdentity().role;
     }
 
     isSecretIdentitySafe() {
-
         return this.secretIdentitySafe;
     }
 }
