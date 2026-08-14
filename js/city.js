@@ -3,82 +3,152 @@ import { createBuildings } from "./buildings.js";
 
 export function createCity(scene) {
 
-    // ==================================
-    // GROUND
-    // ==================================
+    // =================================
+    // HUGE GROUND
+    // =================================
 
     const ground = new THREE.Mesh(
-        new THREE.PlaneGeometry(300, 300),
+        new THREE.PlaneGeometry(
+            500,
+            500
+        ),
         new THREE.MeshStandardMaterial({
             color: 0x555555
         })
     );
 
-    ground.rotation.x = -Math.PI / 2;
+    ground.rotation.x =
+        -Math.PI / 2;
 
     scene.add(ground);
 
-    // ==================================
-    // ROADS
-    // ==================================
+    // =================================
+    // MAIN ROADS
+    // =================================
 
     const roadMaterial =
         new THREE.MeshStandardMaterial({
-            color: 0x222222
+            color: 0x252525
         });
 
-    const road1 = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            20,
-            0.05,
-            300
-        ),
-        roadMaterial
-    );
+    const roadPositions = [
+        -150,
+        -100,
+        -50,
+        0,
+        50,
+        100,
+        150
+    ];
 
-    road1.position.y = 0.03;
+    for (const x of roadPositions) {
 
-    scene.add(road1);
+        const road = new THREE.Mesh(
+            new THREE.BoxGeometry(
+                14,
+                0.05,
+                500
+            ),
+            roadMaterial
+        );
 
-    const road2 = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            300,
-            0.05,
-            20
-        ),
-        roadMaterial
-    );
+        road.position.set(
+            x,
+            0.03,
+            0
+        );
 
-    road2.position.y = 0.04;
+        scene.add(road);
+    }
 
-    scene.add(road2);
+    for (const z of roadPositions) {
 
-    // ==================================
+        const road = new THREE.Mesh(
+            new THREE.BoxGeometry(
+                500,
+                0.05,
+                14
+            ),
+            roadMaterial
+        );
+
+        road.position.set(
+            0,
+            0.04,
+            z
+        );
+
+        scene.add(road);
+    }
+
+    // =================================
+    // SIDEWALK GRID
+    // =================================
+
+    const sidewalkMaterial =
+        new THREE.MeshStandardMaterial({
+            color: 0x888888
+        });
+
+    for (let x = -225; x <= 225; x += 25) {
+
+        const sidewalk = new THREE.Mesh(
+            new THREE.BoxGeometry(
+                6,
+                0.12,
+                450
+            ),
+            sidewalkMaterial
+        );
+
+        sidewalk.position.set(
+            x,
+            0.08,
+            0
+        );
+
+        scene.add(sidewalk);
+    }
+
+    // =================================
+    // PARKS
+    // =================================
+
+    const parkMaterial =
+        new THREE.MeshStandardMaterial({
+            color: 0x2f8f3a
+        });
+
+    const parkPositions = [
+        [-125, -125],
+        [125, -125],
+        [-125, 125],
+        [125, 125]
+    ];
+
+    for (const [x, z] of parkPositions) {
+
+        const park = new THREE.Mesh(
+            new THREE.BoxGeometry(
+                35,
+                0.15,
+                35
+            ),
+            parkMaterial
+        );
+
+        park.position.set(
+            x,
+            0.1,
+            z
+        );
+
+        scene.add(park);
+    }
+
+    // =================================
     // BUILDINGS
-    // ==================================
+    // =================================
 
     createBuildings(scene);
-
-    // ==================================
-    // PARK
-    // ==================================
-
-    const park = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            35,
-            0.1,
-            35
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x228b22
-        })
-    );
-
-    park.position.set(
-        45,
-        0.08,
-        45
-    );
-
-    scene.add(park);
 }
