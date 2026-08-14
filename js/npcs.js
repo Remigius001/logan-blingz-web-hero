@@ -19,6 +19,15 @@ const npcData = [
     { name: "Lily", job: "Student", city: "Central City" }
 ];
 
+const clothingColors = [
+    0x3366ff,
+    0xff4444,
+    0x22aa66,
+    0xffaa22,
+    0xaa44cc,
+    0xffffff
+];
+
 export function createNPCs(scene) {
 
     const npcs = [];
@@ -27,7 +36,6 @@ export function createNPCs(scene) {
 
         const npc = new THREE.Group();
 
-        // BODY
         const body = new THREE.Mesh(
             new THREE.CapsuleGeometry(
                 0.35,
@@ -37,17 +45,18 @@ export function createNPCs(scene) {
             ),
             new THREE.MeshStandardMaterial({
                 color:
-                    0x3366ff +
-                    Math.floor(
-                        Math.random() * 0x444444
-                    )
+                    clothingColors[
+                        Math.floor(
+                            Math.random() *
+                            clothingColors.length
+                        )
+                    ]
             })
         );
 
         body.position.y = 1.3;
         npc.add(body);
 
-        // HEAD
         const head = new THREE.Mesh(
             new THREE.SphereGeometry(
                 0.38,
@@ -62,7 +71,6 @@ export function createNPCs(scene) {
         head.position.y = 2.3;
         npc.add(head);
 
-        // ARMS
         const armMaterial =
             new THREE.MeshStandardMaterial({
                 color: 0xdddddd
@@ -78,19 +86,13 @@ export function createNPCs(scene) {
             armMaterial
         );
 
-        leftArm.position.set(
-            -0.48,
-            1.35,
-            0
-        );
-
+        leftArm.position.set(-0.48, 1.35, 0);
         npc.add(leftArm);
 
         const rightArm = leftArm.clone();
         rightArm.position.x = 0.48;
         npc.add(rightArm);
 
-        // LEGS
         const legMaterial =
             new THREE.MeshStandardMaterial({
                 color: 0x222222
@@ -106,19 +108,13 @@ export function createNPCs(scene) {
             legMaterial
         );
 
-        leftLeg.position.set(
-            -0.2,
-            0.45,
-            0
-        );
-
+        leftLeg.position.set(-0.2, 0.45, 0);
         npc.add(leftLeg);
 
         const rightLeg = leftLeg.clone();
         rightLeg.position.x = 0.2;
         npc.add(rightLeg);
 
-        // CITY START POSITION
         let startX;
         let startZ;
 
@@ -139,36 +135,17 @@ export function createNPCs(scene) {
         scene.add(npc);
 
         npcs.push({
-
             object: npc,
-
             name: data.name,
-
             job: data.job,
-
             homeCity: data.city,
-
             currentCity: data.city,
-
             state: "goingToWork",
-
-            speed:
-                0.02 +
-                Math.random() * 0.02,
-
-            direction:
-                Math.random() *
-                Math.PI *
-                2,
-
-            workTimer:
-                600 +
-                Math.random() * 600,
-
+            speed: 0.02 + Math.random() * 0.02,
+            direction: Math.random() * Math.PI * 2,
+            workTimer: 600 + Math.random() * 600,
             travelTimer: 0,
-
             workplace: null,
-
             destinationCity: null
         });
     }
