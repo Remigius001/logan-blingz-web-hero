@@ -10,8 +10,8 @@ import { IdentitySystem } from "./identity.js";
 import { createBase } from "./base.js";
 
 import {
-    getMission,
-    getMissionCount
+    createRandomMission,
+    getMissionNumber
 } from "./missions.js";
 
 import {
@@ -110,7 +110,7 @@ scene.add(
 
 createCity(scene);
 
-// Guaranteed ground
+// Extra ground
 const emergencyGround =
     new THREE.Mesh(
         new THREE.PlaneGeometry(
@@ -147,7 +147,8 @@ const player =
     new Player(scene);
 
 if (
-    typeof player.health !== "number"
+    typeof player.health !==
+    "number"
 ) {
     player.health = 100;
 }
@@ -294,6 +295,7 @@ const villains = [
 for (
     const villain of villains
 ) {
+
     villain.group.visible = false;
 }
 
@@ -337,18 +339,24 @@ let currentVehicle = null;
 // MISSION STATE
 // ======================================
 
-let missionIndex = 0;
-let missionActive = false;
-let missionComplete = false;
-
 let currentMission = null;
 let currentVillain = null;
+let currentMissionHero = null;
+
+let missionActive = false;
+let missionComplete = false;
 
 let backupHeroes = [];
 let backupCallUsed = false;
 
 // ======================================
-// CALL UI
+// MONEY
+// ======================================
+
+let money = 0;
+
+// ======================================
+// CALL SYSTEM
 // ======================================
 
 let callActive = false;
@@ -385,11 +393,6 @@ function updateCallUI() {
             "skyblade-call-message"
         );
 
-    const titleBox =
-        document.getElementById(
-            "skyblade-call-title"
-        );
-
     if (
         !callBox ||
         !messageBox
@@ -397,18 +400,15 @@ function updateCallUI() {
         return;
     }
 
-    if (callActive) {
+    if (
+        callActive
+    ) {
 
         callBox.style.display =
             "block";
 
         messageBox.textContent =
             callMessage;
-
-        if (titleBox) {
-            titleBox.textContent =
-                "📞 Hero Calling";
-        }
 
     } else {
 
@@ -421,90 +421,129 @@ function updateCallUI() {
 }
 
 // ======================================
-// START NEXT MISSION
+// START RANDOM MISSION
 // ======================================
 
 function startNextMission() {
 
+    hideMissionCharacters();
+
     currentMission =
-        getMission(
-            missionIndex
-        );
+        createRandomMission();
 
-    missionIndex++;
-
-    if (
-        missionIndex >=
-        getMissionCount()
-    ) {
-        missionIndex = 0;
-    }
-
-    if (!currentMission) {
-        return;
-    }
-
-    // Hide all villains
-    for (
-        const villain of villains
-    ) {
-        villain.group.visible =
-            false;
-    }
-
-    // Hide backup heroes
-    for (
-        const hero of [
-            stormKnight,
-            nightflare,
-            titanNova
-        ]
-    ) {
-        hero.group.visible =
-            false;
-    }
+    currentVillain = null;
+    currentMissionHero = null;
 
     backupHeroes = [];
     backupCallUsed = false;
 
-    currentVillain = null;
-
     missionActive = true;
     missionComplete = false;
 
-    // ==================================
-    // SINGLE VILLAIN MISSION
-    // ==================================
+    console.log(
+        `MISSION ${currentMission.id}`
+    );
 
+    console.log(
+        currentMission.title
+    );
+
+    console.log(
+        currentMission.objective
+    );
+
+    console.log(
+        `City: ${currentMission.city}`
+    );
+
+    console.log(
+        `Reward: $${currentMission.reward}`
+    );
+
+    setupMissionCharacters();
+
+    callHero(
+        skyblade,
+        `${currentMission.title}. ${currentMission.objective}`
+    );
+}
+
+// ======================================
+// HIDE MISSION CHARACTERS
+// ======================================
+
+function hideMissionCharacters() {
+
+    for (
+        const villain of villains
+    ) {
+
+        villain.group.visible =
+            false;
+    }
+
+    stormKnight.group.visible =
+        false;
+
+    nightflare.group.visible =
+        false;
+
+    titanNova.group.visible =
+        false;
+}
+
+// ======================================
+// FIND VILLAIN
+// ======================================
+
+function findVillain(
+    name
+) {
+
+    return villains.find(
+        villain =>
+            villain.name ===
+            name
+    );
+}
+
+// ======================================
+// FIND HERO
+// ======================================
+
+function findHero(
+    name
+) {
+
+    return heroes.find(
+        hero =>
+            hero.name ===
+            name
+    );
+}
+
+// ======================================
+// SET UP MISSION CHARACTERS
+// ======================================
+
+function setupMissionCharacters() {
+
+    // Villain
     if (
         currentMission.villain
     ) {
 
         currentVillain =
-            villains.find(
-                villain =>
-                    villain.name ===
-                    currentMission.villain
+            findVillain(
+                currentMission.villain
             );
 
-        if (currentVillain) {
+        if (
+            currentVillain
+        ) {
 
-            currentVillain.health =
-                currentVillain.maxHealth;
-
-            currentVillain.defeated =
-                false;
-
-            currentVillain.injured =
-                false;
-
-            currentVillain.attackCooldown =
-                0;
-
-            currentVillain.group.rotation.set(
-                0,
-                0,
-                0
+            resetVillain(
+                currentVillain
             );
 
             currentVillain.group.position.set(
@@ -518,34 +557,109 @@ function startNextMission() {
         }
     }
 
-    console.log(
-        `MISSION ${currentMission.id}: ${currentMission.title}`
+    // Hero
+    if (
+        currentMission.hero
+    ) {
+
+        currentMissionHero =
+            findHero(
+                currentMission.hero
+            );
+
+        if (
+            currentMissionHero
+        ) {
+
+            resetHero(
+                currentMissionHero
+            );
+
+            currentMissionHero.group.position.set(
+                player.group.position.x - 8,
+                0,
+                player.group.position.z + 6
+            );
+
+            currentMissionHero.group.visible =
+                true;
+        }
+    }
+}
+
+// ======================================
+// RESET VILLAIN
+// ======================================
+
+function resetVillain(
+    villain
+) {
+
+    villain.health =
+        villain.maxHealth;
+
+    villain.energy =
+        villain.maxEnergy;
+
+    villain.defeated =
+        false;
+
+    villain.injured =
+        false;
+
+    villain.attackCooldown =
+        0;
+
+    villain.group.rotation.set(
+        0,
+        0,
+        0
+    );
+}
+
+// ======================================
+// RESET HERO
+// ======================================
+
+function resetHero(
+    hero
+) {
+
+    hero.health =
+        hero.maxHealth;
+
+    hero.energy =
+        hero.maxEnergy;
+
+    hero.defeated =
+        false;
+
+    hero.injured =
+        false;
+
+    hero.group.rotation.set(
+        0,
+        0,
+        0
     );
 
-    console.log(
-        `CITY: ${currentMission.city}`
-    );
-
-    console.log(
-        `OBJECTIVE: ${currentMission.objective}`
-    );
-
-    console.log(
-        `REWARD: $${currentMission.reward}`
-    );
-
-    // Skyblade contacts Logan
-    callHero(
-        skyblade,
-        `${currentMission.title} has started. ${currentMission.objective}`
-    );
+    hero.group.visible =
+        true;
 }
 
 // ======================================
 // BACKUP HERO
 // ======================================
 
-function chooseBackupHero() {
+function callBackupHero() {
+
+    if (
+        !missionActive ||
+        backupCallUsed
+    ) {
+
+        return;
+    }
 
     const available =
         heroes.filter(
@@ -558,59 +672,24 @@ function chooseBackupHero() {
     if (
         available.length === 0
     ) {
-        return null;
-    }
-
-    return available[
-        Math.floor(
-            Math.random() *
-            available.length
-        )
-    ];
-}
-
-function callBackupHero() {
-
-    if (
-        !missionActive ||
-        backupCallUsed
-    ) {
-        return;
-    }
-
-    const hero =
-        chooseBackupHero();
-
-    if (!hero) {
 
         callHero(
             skyblade,
-            "There are no backup heroes available right now."
+            "I can't find another available hero right now."
         );
 
         return;
     }
 
-    backupCallUsed = true;
+    const hero =
+        available[
+            Math.floor(
+                Math.random() *
+                available.length
+            )
+        ];
 
-    backupHeroes = [
-        hero
-    ];
-
-    hero.health =
-        hero.maxHealth;
-
-    hero.energy =
-        hero.maxEnergy;
-
-    hero.defeated = false;
-    hero.injured = false;
-
-    hero.group.rotation.set(
-        0,
-        0,
-        0
-    );
+    resetHero(hero);
 
     hero.group.position.set(
         player.group.position.x - 10,
@@ -618,400 +697,340 @@ function callBackupHero() {
         player.group.position.z + 8
     );
 
-    hero.group.visible = true;
+    backupHeroes = [
+        hero
+    ];
+
+    backupCallUsed = true;
 
     callHero(
         hero,
-        "I'm coming to help you, Logan."
+        "I'm here, Logan. Let's handle this together."
     );
 }
 
 // ======================================
-// MINIMAP
+// AUTOMATIC BACKUP
 // ======================================
 
-const minimap =
-    document.getElementById(
-        "minimap"
-    );
+function checkForBackupCall() {
 
-const minimapContext =
-    minimap
-        ? minimap.getContext("2d")
-        : null;
-
-const MAP_WIDTH = 220;
-const MAP_HEIGHT = 220;
-
-function mapX(worldX) {
-
-    return (
-        (worldX + 260) /
-        520
-    ) * MAP_WIDTH;
-}
-
-function mapY(worldZ) {
-
-    return (
-        (worldZ + 260) /
-        520
-    ) * MAP_HEIGHT;
-}
-
-function mapPoint(
-    worldX,
-    worldZ,
-    radius,
-    color
-) {
-
-    if (!minimapContext) {
-        return;
-    }
-
-    minimapContext.beginPath();
-
-    minimapContext.arc(
-        mapX(worldX),
-        mapY(worldZ),
-        radius,
-        0,
-        Math.PI * 2
-    );
-
-    minimapContext.fillStyle =
-        color;
-
-    minimapContext.fill();
-}
-
-function updateMinimap() {
-
-    if (!minimapContext) {
-        return;
-    }
-
-    minimapContext.clearRect(
-        0,
-        0,
-        MAP_WIDTH,
-        MAP_HEIGHT
-    );
-
-    minimapContext.fillStyle =
-        "#263238";
-
-    minimapContext.fillRect(
-        0,
-        0,
-        MAP_WIDTH,
-        MAP_HEIGHT
-    );
-
-    // Blingz City
-    minimapContext.fillStyle =
-        "#455a64";
-
-    minimapContext.fillRect(
-        10,
-        45,
-        90,
-        120
-    );
-
-    // Central City
-    minimapContext.fillStyle =
-        "#546e7a";
-
-    minimapContext.fillRect(
-        120,
-        45,
-        90,
-        120
-    );
-
-    // Highway
-    minimapContext.fillStyle =
-        "#777777";
-
-    minimapContext.fillRect(
-        95,
-        95,
-        30,
-        25
-    );
-
-    minimapContext.font =
-        "bold 11px Arial";
-
-    minimapContext.fillStyle =
-        "white";
-
-    minimapContext.fillText(
-        "BLINGZ CITY",
-        14,
-        35
-    );
-
-    minimapContext.fillText(
-        "CENTRAL CITY",
-        125,
-        35
-    );
-
-    // Logan
-    mapPoint(
-        player.group.position.x,
-        player.group.position.z,
-        6,
-        "#00aaff"
-    );
-
-    // Heroes
-    for (
-        const hero of heroes
+    if (
+        !missionActive ||
+        backupCallUsed
     ) {
 
+        return;
+    }
+
+    if (
+        player.health <= 35
+    ) {
+
+        callBackupHero();
+    }
+}
+
+// ======================================
+// HERO VS VILLAIN
+// ======================================
+
+function updateMissionHeroBattle() {
+
+    if (
+        !missionActive ||
+        !currentMissionHero ||
+        !currentVillain
+    ) {
+
+        return;
+    }
+
+    if (
+        currentMissionHero.defeated ||
+        currentVillain.defeated
+    ) {
+
+        return;
+    }
+
+    const distance =
+        currentMissionHero.group.position.distanceTo(
+            currentVillain.group.position
+        );
+
+    if (
+        distance > 7
+    ) {
+
+        currentMissionHero.moveToward(
+            currentVillain.group.position.x,
+            currentVillain.group.position.z
+        );
+
+        return;
+    }
+
+    attack(
+        currentMissionHero,
+        currentVillain,
+        15
+    );
+
+    if (
+        currentVillain.attackCooldown <= 0
+    ) {
+
+        currentVillain.attack(
+            currentMissionHero,
+            currentVillain.damage
+        );
+    }
+}
+
+// ======================================
+// HERO RESCUE
+// ======================================
+
+function updateHeroRescueMission() {
+
+    if (
+        !missionActive ||
+        currentMission.type !==
+        "hero_rescue" ||
+        !currentMissionHero ||
+        !currentVillain
+    ) {
+
+        return;
+    }
+
+    const distance =
+        player.group.position.distanceTo(
+            currentMissionHero.group.position
+        );
+
+    if (
+        currentMissionHero.defeated &&
+        distance < 8
+    ) {
+
+        resetHero(
+            currentMissionHero
+        );
+
+        callHero(
+            currentMissionHero,
+            "Thanks, Logan. I'm back."
+        );
+    }
+}
+
+// ======================================
+// BACKUP HEROES
+// ======================================
+
+function updateBackupHeroes() {
+
+    for (
+        const hero of backupHeroes
+    ) {
+
+        hero.update();
+
         if (
-            hero.defeated ||
-            !hero.group.visible
+            hero.defeated
         ) {
+
             continue;
         }
 
-        let color =
-            "#9c4dff";
+        const distance =
+            hero.group.position.distanceTo(
+                player.group.position
+            );
 
-        if (hero === skyblade) {
-            color = "#6633ff";
+        if (
+            distance > 7
+        ) {
+
+            hero.moveToward(
+                player.group.position.x - 5,
+                player.group.position.z + 4
+            );
         }
 
-        if (hero === stormKnight) {
-            color = "#22aa88";
-        }
+        if (
+            currentVillain &&
+            !currentVillain.defeated
+        ) {
 
-        if (hero === nightflare) {
-            color = "#cc44ff";
-        }
+            const enemyDistance =
+                hero.group.position.distanceTo(
+                    currentVillain.group.position
+                );
 
-        if (hero === titanNova) {
-            color = "#ffaa22";
-        }
+            if (
+                enemyDistance < 9
+            ) {
 
-        mapPoint(
-            hero.group.position.x,
-            hero.group.position.z,
-            4,
-            color
-        );
+                attack(
+                    hero,
+                    currentVillain,
+                    15
+                );
+            }
+        }
     }
+}
 
-    // Current villain
+// ======================================
+// CURRENT VILLAIN AI
+// ======================================
+
+function updateCurrentVillain() {
+
     if (
-        currentVillain &&
-        currentVillain.group.visible &&
-        !currentVillain.defeated
+        !missionActive ||
+        !currentVillain
     ) {
 
-        mapPoint(
-            currentVillain.group.position.x,
-            currentVillain.group.position.z,
-            5,
-            "#ff3333"
-        );
+        return;
     }
 
-    // Base
-    mapPoint(
-        -60,
-        -55,
-        5,
-        "#00ff66"
+    currentVillain.update();
+
+    if (
+        currentVillain.defeated
+    ) {
+
+        return;
+    }
+
+    currentVillain.moveToward({
+        x:
+            player.group.position.x,
+
+        z:
+            player.group.position.z
+    });
+
+    const distance =
+        currentVillain.group.position.distanceTo(
+            player.group.position
+        );
+
+    if (
+        distance < 5 &&
+        currentVillain.attackCooldown <= 0
+    ) {
+
+        currentVillain.attack(
+            player,
+            currentVillain.damage
+        );
+    }
+}
+
+// ======================================
+// MISSION COMPLETE
+// ======================================
+
+function completeMission() {
+
+    if (
+        !missionActive
+    ) {
+
+        return;
+    }
+
+    missionActive =
+        false;
+
+    missionComplete =
+        true;
+
+    money +=
+        currentMission.reward;
+
+    callHero(
+        skyblade,
+        `Mission complete. You earned $${currentMission.reward}.`
     );
 
-    minimapContext.strokeStyle =
-        "white";
+    for (
+        const hero of backupHeroes
+    ) {
 
-    minimapContext.lineWidth = 2;
+        hero.group.visible =
+            false;
+    }
 
-    minimapContext.strokeRect(
-        1,
-        1,
-        MAP_WIDTH - 2,
-        MAP_HEIGHT - 2
+    backupHeroes = [];
+
+    console.log(
+        `Money: $${money}`
     );
 }
 
 // ======================================
-// KEYBOARD
+// CHECK MISSION COMPLETION
 // ======================================
 
-const keys = {};
+function updateMission() {
 
-window.addEventListener(
-    "keydown",
-    event => {
+    if (
+        !missionActive ||
+        !currentMission
+    ) {
 
-        const key =
-            event.key.toLowerCase();
+        return;
+    }
 
-        keys[key] = true;
+    // Villain missions
+    if (
+        currentVillain &&
+        currentVillain.defeated
+    ) {
+
+        completeMission();
+
+        return;
+    }
+
+    // Hero rescue
+    if (
+        currentMission.type ===
+        "hero_rescue"
+    ) {
 
         if (
-            key === "i"
-        ) {
-
-            identity.toggleIdentity();
-
-            updateIdentityUI();
-        }
-
-        if (
-            key === "e"
-        ) {
-
-            if (
-                currentVehicle
-            ) {
-
-                currentVehicle.exit();
-
-                player.group.visible =
-                    true;
-
-                player.group.position.copy(
-                    currentVehicle.group.position
-                );
-
-                player.group.position.x +=
-                    3;
-
-                currentVehicle =
-                    null;
-
-                return;
-            }
-
-            let nearestVehicle =
-                null;
-
-            let nearestDistance =
-                Infinity;
-
-            for (
-                const vehicle of vehicles
-            ) {
-
-                const distance =
-                    player.group.position.distanceTo(
-                        vehicle.group.position
-                    );
-
-                if (
-                    distance < 6 &&
-                    distance < nearestDistance
-                ) {
-
-                    nearestDistance =
-                        distance;
-
-                    nearestVehicle =
-                        vehicle;
-                }
-            }
-
-            if (
-                nearestVehicle
-            ) {
-
-                currentVehicle =
-                    nearestVehicle;
-
-                currentVehicle.enter();
-
-                player.group.visible =
-                    false;
-            }
-        }
-
-        // Next mission
-        if (
-            key === "m"
-        ) {
-
-            startNextMission();
-        }
-
-        // Backup
-        if (
-            key === "h"
-        ) {
-
-            callBackupHero();
-        }
-
-        // Logan attack
-        if (
-            key === "f" &&
-            currentVillain
+            currentMissionHero &&
+            !currentMissionHero.defeated
         ) {
 
             const distance =
                 player.group.position.distanceTo(
-                    currentVillain.group.position
+                    currentMissionHero.group.position
                 );
 
             if (
-                distance < 8 &&
-                !isDefeated(
-                    currentVillain
-                )
+                distance < 8
             ) {
 
-                currentVillain.takeDamage(
-                    20
-                );
-            }
-        }
-
-        // Skyblade attack
-        if (
-            key === "g" &&
-            currentVillain
-        ) {
-
-            const distance =
-                skyblade.group.position.distanceTo(
-                    currentVillain.group.position
-                );
-
-            if (
-                distance < 10 &&
-                !isDefeated(
-                    currentVillain
-                )
-            ) {
-
-                attack(
-                    skyblade,
-                    currentVillain,
-                    25
-                );
+                completeMission();
             }
         }
     }
-);
 
-window.addEventListener(
-    "keyup",
-    event => {
-
-        keys[
-            event.key.toLowerCase()
-        ] = false;
-    }
-);
+    // Protect / rescue / search / chase /
+    // emergency missions currently use
+    // their objective framework.
+    //
+    // We will attach physical world
+    // objectives to these later.
+}
 
 // ======================================
 // BASE
@@ -1023,6 +1042,7 @@ function updateBase() {
         !base ||
         !base.suitPosition
     ) {
+
         return;
     }
 
@@ -1057,6 +1077,7 @@ function updateNPCs() {
             npc.state ===
             "working"
         ) {
+
             continue;
         }
 
@@ -1130,6 +1151,7 @@ function updateNPCJobs() {
             npc.state !==
             "working"
         ) {
+
             continue;
         }
 
@@ -1180,13 +1202,14 @@ function updateSkyblade() {
     if (
         skyblade.defeated
     ) {
+
         return;
     }
 
-    // Skyblade stays away during missions
     if (
         missionActive
     ) {
+
         return;
     }
 
@@ -1194,206 +1217,6 @@ function updateSkyblade() {
         player.group.position.x + 5,
         player.group.position.z + 3
     );
-}
-
-// ======================================
-// BACKUP HEROES
-// ======================================
-
-function updateBackupHeroes() {
-
-    for (
-        const hero of backupHeroes
-    ) {
-
-        hero.update();
-
-        if (
-            hero.defeated
-        ) {
-            continue;
-        }
-
-        const distance =
-            hero.group.position.distanceTo(
-                player.group.position
-            );
-
-        if (
-            distance > 7
-        ) {
-
-            hero.moveToward(
-                player.group.position.x - 5,
-                player.group.position.z + 4
-            );
-        }
-
-        if (
-            currentVillain &&
-            !currentVillain.defeated
-        ) {
-
-            const enemyDistance =
-                hero.group.position.distanceTo(
-                    currentVillain.group.position
-                );
-
-            if (
-                enemyDistance < 9
-            ) {
-
-                attack(
-                    hero,
-                    currentVillain,
-                    15
-                );
-            }
-        }
-    }
-}
-
-// ======================================
-// AUTOMATIC BACKUP
-// ======================================
-
-function checkForBackupCall() {
-
-    if (
-        !missionActive ||
-        backupCallUsed
-    ) {
-        return;
-    }
-
-    if (
-        player.health <= 35
-    ) {
-
-        callBackupHero();
-    }
-}
-
-// ======================================
-// CURRENT VILLAIN
-// ======================================
-
-function updateCurrentVillain() {
-
-    if (
-        !missionActive ||
-        !currentVillain
-    ) {
-        return;
-    }
-
-    currentVillain.update();
-
-    if (
-        currentVillain.defeated
-    ) {
-        return;
-    }
-
-    currentVillain.moveToward({
-        x:
-            player.group.position.x,
-
-        z:
-            player.group.position.z
-    });
-
-    const distance =
-        currentVillain.group.position.distanceTo(
-            player.group.position
-        );
-
-    if (
-        distance < 5 &&
-        currentVillain.attackCooldown <= 0
-    ) {
-
-        currentVillain.attack(
-            player,
-            currentVillain.damage
-        );
-
-        currentVillain.attackCooldown =
-            120;
-    }
-}
-
-// ======================================
-// MISSION UPDATE
-// ======================================
-
-function updateMission() {
-
-    if (
-        !missionActive ||
-        !currentMission
-    ) {
-        return;
-    }
-
-    // Villain mission complete
-    if (
-        currentVillain &&
-        currentVillain.defeated
-    ) {
-
-        missionActive =
-            false;
-
-        missionComplete =
-            true;
-
-        callHero(
-            skyblade,
-            `Mission complete. ${currentVillain.name} has been stopped.`
-        );
-
-        for (
-            const hero of backupHeroes
-        ) {
-
-            hero.group.visible =
-                false;
-        }
-
-        backupHeroes = [];
-    }
-}
-
-// ======================================
-// MISSION UI
-// ======================================
-
-function updateMissionUI() {
-
-    const missionElement =
-        document.getElementById(
-            "mission"
-        );
-
-    if (
-        !missionElement
-    ) {
-        return;
-    }
-
-    if (
-        !currentMission
-    ) {
-
-        missionElement.textContent =
-            "Mission: None";
-
-        return;
-    }
-
-    missionElement.textContent =
-        `Mission ${currentMission.id}: ${currentMission.title} — ${currentMission.objective}`;
 }
 
 // ======================================
@@ -1405,6 +1228,7 @@ function updateCallTimer() {
     if (
         !callActive
     ) {
+
         return;
     }
 
@@ -1425,6 +1249,38 @@ function updateCallTimer() {
 }
 
 // ======================================
+// MISSION UI
+// ======================================
+
+function updateMissionUI() {
+
+    const missionElement =
+        document.getElementById(
+            "mission"
+        );
+
+    if (
+        !missionElement
+    ) {
+
+        return;
+    }
+
+    if (
+        !currentMission
+    ) {
+
+        missionElement.textContent =
+            "Mission: None";
+
+        return;
+    }
+
+    missionElement.textContent =
+        `Mission ${currentMission.id}: ${currentMission.title} | ${currentMission.city} | ${currentMission.objective} | Reward: $${currentMission.reward}`;
+}
+
+// ======================================
 // IDENTITY UI
 // ======================================
 
@@ -1438,6 +1294,7 @@ function updateIdentityUI() {
     if (
         !element
     ) {
+
         return;
     }
 
@@ -1467,6 +1324,11 @@ function updateHealthUI() {
     const villainHealthElement =
         document.getElementById(
             "villain-health"
+        );
+
+    const moneyElement =
+        document.getElementById(
+            "money"
         );
 
     if (
@@ -1502,54 +1364,412 @@ function updateHealthUI() {
         villainHealthElement.textContent =
             `${name} Health: ${health}`;
     }
+
+    if (
+        moneyElement
+    ) {
+
+        moneyElement.textContent =
+            `Money: $${money}`;
+    }
 }
 
 // ======================================
-// CAMERA
+// MINIMAP
 // ======================================
 
-function updateCamera() {
+const minimap =
+    document.getElementById(
+        "minimap"
+    );
+
+const minimapContext =
+    minimap
+        ? minimap.getContext("2d")
+        : null;
+
+const MAP_WIDTH = 220;
+const MAP_HEIGHT = 220;
+
+function mapPoint(
+    x,
+    z,
+    radius,
+    color
+) {
 
     if (
-        currentVehicle
+        !minimapContext
     ) {
-
-        camera.position.x =
-            currentVehicle.group.position.x;
-
-        camera.position.y =
-            currentVehicle.group.position.y +
-            6;
-
-        camera.position.z =
-            currentVehicle.group.position.z +
-            12;
-
-        camera.lookAt(
-            currentVehicle.group.position
-        );
 
         return;
     }
 
-    camera.position.x =
-        player.group.position.x;
+    const px =
+        ((x + 260) / 520) *
+        MAP_WIDTH;
 
-    camera.position.y =
-        player.group.position.y +
-        5;
+    const py =
+        ((z + 260) / 520) *
+        MAP_HEIGHT;
 
-    camera.position.z =
-        player.group.position.z +
-        10;
+    minimapContext.beginPath();
 
-    camera.lookAt(
+    minimapContext.arc(
+        px,
+        py,
+        radius,
+        0,
+        Math.PI * 2
+    );
+
+    minimapContext.fillStyle =
+        color;
+
+    minimapContext.fill();
+}
+
+function updateMinimap() {
+
+    if (
+        !minimapContext
+    ) {
+
+        return;
+    }
+
+    minimapContext.fillStyle =
+        "#263238";
+
+    minimapContext.fillRect(
+        0,
+        0,
+        MAP_WIDTH,
+        MAP_HEIGHT
+    );
+
+    // Cities
+    minimapContext.fillStyle =
+        "#455a64";
+
+    minimapContext.fillRect(
+        10,
+        45,
+        90,
+        120
+    );
+
+    minimapContext.fillStyle =
+        "#546e7a";
+
+    minimapContext.fillRect(
+        120,
+        45,
+        90,
+        120
+    );
+
+    // Highway
+    minimapContext.fillStyle =
+        "#777777";
+
+    minimapContext.fillRect(
+        95,
+        95,
+        30,
+        25
+    );
+
+    minimapContext.font =
+        "bold 11px Arial";
+
+    minimapContext.fillStyle =
+        "white";
+
+    minimapContext.fillText(
+        "BLINGZ CITY",
+        14,
+        35
+    );
+
+    minimapContext.fillText(
+        "CENTRAL CITY",
+        125,
+        35
+    );
+
+    // Base
+    mapPoint(
+        -60,
+        -55,
+        5,
+        "#00ff66"
+    );
+
+    // Logan
+    mapPoint(
         player.group.position.x,
-        player.group.position.y +
-        1.5,
-        player.group.position.z
+        player.group.position.z,
+        6,
+        "#00aaff"
+    );
+
+    // Heroes
+    for (
+        const hero of heroes
+    ) {
+
+        if (
+            hero.defeated ||
+            !hero.group.visible
+        ) {
+
+            continue;
+        }
+
+        let color =
+            "#9c4dff";
+
+        if (
+            hero === skyblade
+        ) {
+
+            color =
+                "#6633ff";
+        }
+
+        if (
+            hero === stormKnight
+        ) {
+
+            color =
+                "#22aa88";
+        }
+
+        if (
+            hero === nightflare
+        ) {
+
+            color =
+                "#cc44ff";
+        }
+
+        if (
+            hero === titanNova
+        ) {
+
+            color =
+                "#ffaa22";
+        }
+
+        mapPoint(
+            hero.group.position.x,
+            hero.group.position.z,
+            4,
+            color
+        );
+    }
+
+    // Villain
+    if (
+        currentVillain &&
+        currentVillain.group.visible &&
+        !currentVillain.defeated
+    ) {
+
+        mapPoint(
+            currentVillain.group.position.x,
+            currentVillain.group.position.z,
+            5,
+            "#ff3333"
+        );
+    }
+
+    minimapContext.strokeStyle =
+        "white";
+
+    minimapContext.lineWidth =
+        2;
+
+    minimapContext.strokeRect(
+        1,
+        1,
+        MAP_WIDTH - 2,
+        MAP_HEIGHT - 2
     );
 }
+
+// ======================================
+// KEYBOARD
+// ======================================
+
+const keys = {};
+
+window.addEventListener(
+    "keydown",
+    event => {
+
+        const key =
+            event.key.toLowerCase();
+
+        keys[key] = true;
+
+        // Identity
+        if (
+            key === "i"
+        ) {
+
+            identity.toggleIdentity();
+
+            updateIdentityUI();
+        }
+
+        // Vehicles
+        if (
+            key === "e"
+        ) {
+
+            if (
+                currentVehicle
+            ) {
+
+                currentVehicle.exit();
+
+                player.group.visible =
+                    true;
+
+                player.group.position.copy(
+                    currentVehicle.group.position
+                );
+
+                player.group.position.x +=
+                    3;
+
+                currentVehicle =
+                    null;
+
+                return;
+            }
+
+            let nearestVehicle =
+                null;
+
+            let nearestDistance =
+                Infinity;
+
+            for (
+                const vehicle of vehicles
+            ) {
+
+                const distance =
+                    player.group.position.distanceTo(
+                        vehicle.group.position
+                    );
+
+                if (
+                    distance < 6 &&
+                    distance < nearestDistance
+                ) {
+
+                    nearestDistance =
+                        distance;
+
+                    nearestVehicle =
+                        vehicle;
+                }
+            }
+
+            if (
+                nearestVehicle
+            ) {
+
+                currentVehicle =
+                    nearestVehicle;
+
+                currentVehicle.enter();
+
+                player.group.visible =
+                    false;
+            }
+        }
+
+        // Endless missions
+        if (
+            key === "m"
+        ) {
+
+            startNextMission();
+        }
+
+        // Backup hero
+        if (
+            key === "h"
+        ) {
+
+            callBackupHero();
+        }
+
+        // Logan attacks
+        if (
+            key === "f" &&
+            currentVillain
+        ) {
+
+            const distance =
+                player.group.position.distanceTo(
+                    currentVillain.group.position
+                );
+
+            if (
+                distance < 8 &&
+                !isDefeated(
+                    currentVillain
+                )
+            ) {
+
+                currentVillain.takeDamage(
+                    20
+                );
+            }
+        }
+
+        // Skyblade attacks
+        if (
+            key === "g" &&
+            currentVillain
+        ) {
+
+            const distance =
+                skyblade.group.position.distanceTo(
+                    currentVillain.group.position
+                );
+
+            if (
+                distance < 10 &&
+                !isDefeated(
+                    currentVillain
+                )
+            ) {
+
+                attack(
+                    skyblade,
+                    currentVillain,
+                    25
+                );
+            }
+        }
+    }
+);
+
+window.addEventListener(
+    "keyup",
+    event => {
+
+        keys[
+            event.key.toLowerCase()
+        ] = false;
+    }
+);
 
 // ======================================
 // GAME LOOP
@@ -1572,15 +1792,22 @@ function animate() {
     updateNPCJobs();
     updateNPCs();
     updateVehicles();
+
     updateSkyblade();
+
+    updateMissionHeroBattle();
+    updateHeroRescueMission();
     updateBackupHeroes();
     checkForBackupCall();
     updateCurrentVillain();
     updateMission();
-    updateMissionUI();
+
     updateCallTimer();
+
+    updateMissionUI();
     updateIdentityUI();
     updateHealthUI();
+
     updateCamera();
     updateMinimap();
 
