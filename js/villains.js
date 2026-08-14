@@ -7,26 +7,35 @@ export class Villain {
         name,
         x,
         z,
-        color = 0x5511aa
+        color = 0x5511aa,
+        maxHealth = 120,
+        speed = 0.03,
+        damage = 15
     ) {
+
         this.scene = scene;
         this.name = name;
 
-        this.maxHealth = 120;
-        this.health = 120;
+        this.maxHealth = maxHealth;
+        this.health = maxHealth;
 
         this.maxEnergy = 100;
         this.energy = 100;
+
+        this.speed = speed;
+        this.damage = damage;
 
         this.defeated = false;
         this.injured = false;
 
         this.attackCooldown = 0;
-        this.speed = 0.03;
 
         this.group = new THREE.Group();
 
-        // Body
+        // ==================================
+        // BODY
+        // ==================================
+
         const body = new THREE.Mesh(
             new THREE.CapsuleGeometry(
                 0.45,
@@ -40,9 +49,13 @@ export class Villain {
         );
 
         body.position.y = 1.45;
+
         this.group.add(body);
 
-        // Head
+        // ==================================
+        // HEAD
+        // ==================================
+
         const head = new THREE.Mesh(
             new THREE.SphereGeometry(
                 0.43,
@@ -55,9 +68,13 @@ export class Villain {
         );
 
         head.position.y = 2.5;
+
         this.group.add(head);
 
-        // Arms
+        // ==================================
+        // ARMS
+        // ==================================
+
         const armMaterial =
             new THREE.MeshStandardMaterial({
                 color: color
@@ -82,10 +99,15 @@ export class Villain {
         this.group.add(leftArm);
 
         const rightArm = leftArm.clone();
+
         rightArm.position.x = 0.55;
+
         this.group.add(rightArm);
 
-        // Legs
+        // ==================================
+        // LEGS
+        // ==================================
+
         const legMaterial =
             new THREE.MeshStandardMaterial({
                 color: 0x111111
@@ -110,8 +132,14 @@ export class Villain {
         this.group.add(leftLeg);
 
         const rightLeg = leftLeg.clone();
+
         rightLeg.position.x = 0.22;
+
         this.group.add(rightLeg);
+
+        // ==================================
+        // POSITION
+        // ==================================
 
         this.group.position.set(
             x,
@@ -121,6 +149,10 @@ export class Villain {
 
         scene.add(this.group);
     }
+
+    // ==================================
+    // MOVE
+    // ==================================
 
     moveToward(target) {
 
@@ -156,10 +188,12 @@ export class Villain {
             dz / distance;
 
         this.group.position.x +=
-            directionX * this.speed;
+            directionX *
+            this.speed;
 
         this.group.position.z +=
-            directionZ * this.speed;
+            directionZ *
+            this.speed;
 
         const targetRotation =
             Math.atan2(
@@ -175,6 +209,10 @@ export class Villain {
             );
     }
 
+    // ==================================
+    // DAMAGE
+    // ==================================
+
     takeDamage(amount) {
 
         if (this.defeated) {
@@ -189,17 +227,35 @@ export class Villain {
                 this.health
             );
 
-        if (this.health <= 60) {
+        if (
+            this.health <=
+            this.maxHealth * 0.5
+        ) {
+
             this.injured = true;
         }
 
         if (this.health === 0) {
+
             this.defeated = true;
-            this.group.rotation.x = -0.45;
+
+            this.group.rotation.x =
+                -0.45;
+
+            console.log(
+                `${this.name} has been defeated.`
+            );
         }
     }
 
-    attack(target, damage = 15) {
+    // ==================================
+    // ATTACK
+    // ==================================
+
+    attack(
+        target,
+        damage = this.damage
+    ) {
 
         if (
             this.defeated ||
@@ -209,16 +265,24 @@ export class Villain {
             return false;
         }
 
-        if (this.attackCooldown > 0) {
+        if (
+            this.attackCooldown > 0
+        ) {
             return false;
         }
 
         this.attackCooldown = 60;
 
-        target.takeDamage(damage);
+        target.takeDamage(
+            damage
+        );
 
         return true;
     }
+
+    // ==================================
+    // UPDATE
+    // ==================================
 
     update() {
 
@@ -226,7 +290,10 @@ export class Villain {
             return;
         }
 
-        if (this.attackCooldown > 0) {
+        if (
+            this.attackCooldown > 0
+        ) {
+
             this.attackCooldown--;
         }
 
