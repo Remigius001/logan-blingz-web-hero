@@ -16,7 +16,6 @@
         href="./style.css"
     >
 
-    <!-- Three.js import map -->
     <script type="importmap">
     {
         "imports": {
@@ -29,14 +28,11 @@
 <body>
 
     <!-- GAME TITLE -->
-
     <div id="title">
         LOGAN BLINGZ
     </div>
 
-
-    <!-- HEALTH DISPLAY -->
-
+    <!-- HEALTH -->
     <div id="health">
         Logan Health: 100
     </div>
@@ -49,24 +45,26 @@
         Shadow King Health: 120
     </div>
 
+    <!-- IDENTITY -->
+    <div id="identity">
+        Identity: Logan
+    </div>
 
     <!-- CONTROLS -->
-
     <div id="controls">
 
         <div>W A S D — Move</div>
         <div>SHIFT — Run</div>
         <div>SPACE — Jump</div>
         <div>E — Enter / Exit Vehicle</div>
+        <div>I — Change Identity</div>
         <div>M — Start Mission</div>
         <div>F — Logan Attack</div>
         <div>G — Skyblade Attack</div>
 
     </div>
 
-
     <!-- GAME -->
-
     <script
         type="module"
         src="./js/game.js"
