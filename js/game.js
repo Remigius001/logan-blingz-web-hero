@@ -53,6 +53,8 @@ renderer.setPixelRatio(
 
 renderer.shadowMap.enabled = true;
 
+renderer.domElement.id = "gameCanvas";
+
 document.body.appendChild(
     renderer.domElement
 );
@@ -89,6 +91,19 @@ scene.add(
 
 createCity(scene);
 
+// Guaranteed ground
+const emergencyGround = new THREE.Mesh(
+    new THREE.PlaneGeometry(500, 500),
+    new THREE.MeshStandardMaterial({
+        color: 0x555555
+    })
+);
+
+emergencyGround.rotation.x = -Math.PI / 2;
+emergencyGround.position.y = -0.02;
+
+scene.add(emergencyGround);
+
 // ======================================
 // BASE
 // ======================================
@@ -120,7 +135,7 @@ const identity = new IdentitySystem(player);
 const npcs = createNPCs(scene);
 
 // ======================================
-// SECOND HERO
+// HERO
 // ======================================
 
 const skyblade = new Hero(
@@ -195,28 +210,26 @@ const minimapContext =
         ? minimap.getContext("2d")
         : null;
 
-const MINIMAP_SIZE = 220;
-const WORLD_MIN = -260;
-const WORLD_SIZE = 520;
+const MAP_WIDTH = 220;
+const MAP_HEIGHT = 220;
 
-function worldToMap(x, z) {
+function mapX(worldX) {
 
-    return {
-        x:
-            ((x - WORLD_MIN) /
-                WORLD_SIZE) *
-            MINIMAP_SIZE,
-
-        y:
-            ((z - WORLD_MIN) /
-                WORLD_SIZE) *
-            MINIMAP_SIZE
-    };
+    return (
+        (worldX + 260) / 520
+    ) * MAP_WIDTH;
 }
 
-function drawMapPoint(
-    x,
-    z,
+function mapY(worldZ) {
+
+    return (
+        (worldZ + 260) / 520
+    ) * MAP_HEIGHT;
+}
+
+function mapPoint(
+    worldX,
+    worldZ,
     radius,
     color
 ) {
@@ -225,13 +238,11 @@ function drawMapPoint(
         return;
     }
 
-    const point = worldToMap(x, z);
-
     minimapContext.beginPath();
 
     minimapContext.arc(
-        point.x,
-        point.y,
+        mapX(worldX),
+        mapY(worldZ),
         radius,
         0,
         Math.PI * 2
@@ -248,16 +259,23 @@ function updateMinimap() {
         return;
     }
 
-    // Background
+    // Clear
+    minimapContext.clearRect(
+        0,
+        0,
+        MAP_WIDTH,
+        MAP_HEIGHT
+    );
 
+    // Background
     minimapContext.fillStyle =
-        "#20262b";
+        "#263238";
 
     minimapContext.fillRect(
         0,
         0,
-        MINIMAP_SIZE,
-        MINIMAP_SIZE
+        MAP_WIDTH,
+        MAP_HEIGHT
     );
 
     // ==================================
@@ -265,7 +283,7 @@ function updateMinimap() {
     // ==================================
 
     minimapContext.fillStyle =
-        "#3f474e";
+        "#455a64";
 
     minimapContext.fillRect(
         10,
@@ -277,6 +295,9 @@ function updateMinimap() {
     // ==================================
     // CENTRAL CITY
     // ==================================
+
+    minimapContext.fillStyle =
+        "#546e7a";
 
     minimapContext.fillRect(
         120,
@@ -290,7 +311,7 @@ function updateMinimap() {
     // ==================================
 
     minimapContext.fillStyle =
-        "#666666";
+        "#777777";
 
     minimapContext.fillRect(
         95,
@@ -304,7 +325,7 @@ function updateMinimap() {
     // ==================================
 
     minimapContext.strokeStyle =
-        "#858585";
+        "#9e9e9e";
 
     minimapContext.lineWidth = 2;
 
@@ -386,7 +407,7 @@ function updateMinimap() {
     }
 
     // ==================================
-    // CITY NAMES
+    // CITY LABELS
     // ==================================
 
     minimapContext.font =
@@ -396,14 +417,14 @@ function updateMinimap() {
         "white";
 
     minimapContext.fillText(
-        "BLINGZ",
-        20,
+        "BLINGZ CITY",
+        14,
         35
     );
 
     minimapContext.fillText(
-        "CENTRAL",
-        135,
+        "CENTRAL CITY",
+        125,
         35
     );
 
@@ -411,22 +432,22 @@ function updateMinimap() {
     // BASE
     // ==================================
 
-    drawMapPoint(
+    mapPoint(
         -60,
         -55,
         5,
-        "#22cc55"
+        "#00ff66"
     );
 
     // ==================================
     // LOGAN
     // ==================================
 
-    drawMapPoint(
+    mapPoint(
         player.group.position.x,
         player.group.position.z,
         6,
-        "#2196ff"
+        "#00aaff"
     );
 
     // ==================================
@@ -438,11 +459,11 @@ function updateMinimap() {
         !skyblade.defeated
     ) {
 
-        drawMapPoint(
+        mapPoint(
             skyblade.group.position.x,
             skyblade.group.position.z,
             4,
-            "#8844ff"
+            "#9c4dff"
         );
     }
 
@@ -456,7 +477,7 @@ function updateMinimap() {
         !shadowKing.defeated
     ) {
 
-        drawMapPoint(
+        mapPoint(
             shadowKing.group.position.x,
             shadowKing.group.position.z,
             5,
@@ -469,15 +490,15 @@ function updateMinimap() {
     // ==================================
 
     minimapContext.strokeStyle =
-        "white";
+        "#ffffff";
 
     minimapContext.lineWidth = 2;
 
     minimapContext.strokeRect(
         1,
         1,
-        MINIMAP_SIZE - 2,
-        MINIMAP_SIZE - 2
+        MAP_WIDTH - 2,
+        MAP_HEIGHT - 2
     );
 }
 
@@ -508,12 +529,10 @@ window.addEventListener(
         }
 
         // ==================================
-        // ENTER / EXIT VEHICLE
+        // VEHICLE ENTER / EXIT
         // ==================================
 
         if (key === "e") {
-
-            // Exit vehicle
 
             if (currentVehicle) {
 
@@ -532,16 +551,10 @@ window.addEventListener(
                 return;
             }
 
-            // Find nearest vehicle
-
             let nearestVehicle = null;
+            let nearestDistance = Infinity;
 
-            let nearestDistance =
-                Infinity;
-
-            for (
-                const vehicle of vehicles
-            ) {
+            for (const vehicle of vehicles) {
 
                 const distance =
                     player.group.position.distanceTo(
@@ -561,8 +574,6 @@ window.addEventListener(
                 }
             }
 
-            // Enter vehicle
-
             if (nearestVehicle) {
 
                 currentVehicle =
@@ -581,11 +592,9 @@ window.addEventListener(
         if (key === "m") {
 
             missionActive = true;
-
             missionComplete = false;
 
             shadowKing.defeated = false;
-
             shadowKing.health =
                 shadowKing.maxHealth;
 
@@ -613,10 +622,6 @@ window.addEventListener(
             ) {
 
                 shadowKing.takeDamage(20);
-
-                console.log(
-                    "Logan attacked Shadow King."
-                );
             }
         }
 
@@ -657,7 +662,7 @@ window.addEventListener(
 );
 
 // ======================================
-// BASE / TRANSFORMATION
+// BASE
 // ======================================
 
 function updateBase() {
@@ -690,31 +695,23 @@ function updateBase() {
 
 function updateNPCs() {
 
-    for (
-        const npc of npcs
-    ) {
+    for (const npc of npcs) {
 
-        if (
-            npc.state === "working"
-        ) {
+        if (npc.state === "working") {
             continue;
         }
 
         npc.object.position.x +=
             Math.cos(
                 npc.direction
-            ) *
-            npc.speed;
+            ) * npc.speed;
 
         npc.object.position.z +=
             Math.sin(
                 npc.direction
-            ) *
-            npc.speed;
+            ) * npc.speed;
 
-        if (
-            Math.random() < 0.003
-        ) {
+        if (Math.random() < 0.003) {
 
             npc.direction =
                 Math.random() *
@@ -744,27 +741,18 @@ function updateNPCs() {
 
 function updateNPCJobs() {
 
-    for (
-        const npc of npcs
-    ) {
+    for (const npc of npcs) {
 
-        if (
-            npc.state !== "working"
-        ) {
+        if (npc.state !== "working") {
             continue;
         }
 
         npc.workTimer--;
 
-        if (
-            npc.workTimer <= 0
-        ) {
+        if (npc.workTimer <= 0) {
 
-            npc.state =
-                "goingToWork";
-
-            npc.object.visible =
-                true;
+            npc.state = "goingToWork";
+            npc.object.visible = true;
 
             npc.workTimer =
                 600 +
@@ -779,9 +767,7 @@ function updateNPCJobs() {
 
 function updateVehicles() {
 
-    if (
-        currentVehicle
-    ) {
+    if (currentVehicle) {
 
         currentVehicle.update(keys);
     }
@@ -795,9 +781,7 @@ function updateSkyblade() {
 
     skyblade.update();
 
-    if (
-        skyblade.defeated
-    ) {
+    if (skyblade.defeated) {
         return;
     }
 
@@ -808,16 +792,12 @@ function updateSkyblade() {
         player.group.position.z + 3;
 
     skyblade.group.position.x +=
-        (
-            targetX -
-            skyblade.group.position.x
-        ) * 0.02;
+        (targetX -
+            skyblade.group.position.x) * 0.02;
 
     skyblade.group.position.z +=
-        (
-            targetZ -
-            skyblade.group.position.z
-        ) * 0.02;
+        (targetZ -
+            skyblade.group.position.z) * 0.02;
 }
 
 // ======================================
@@ -840,9 +820,7 @@ function updateShadowKing() {
             player.group.position
         );
 
-    if (
-        distance > 4
-    ) {
+    if (distance > 4) {
 
         const dx =
             player.group.position.x -
@@ -868,7 +846,6 @@ function updateShadowKing() {
         }
     }
 
-    // Villain damages Logan
     if (
         distance < 5 &&
         shadowKing.attackCooldown <= 0
@@ -876,10 +853,7 @@ function updateShadowKing() {
 
         player.health -= 5;
 
-        if (
-            player.health < 0
-        ) {
-
+        if (player.health < 0) {
             player.health = 0;
         }
 
@@ -900,7 +874,6 @@ function updateMission() {
     ) {
 
         missionActive = false;
-
         missionComplete = true;
 
         console.log(
@@ -916,9 +889,7 @@ function updateMission() {
 function updateIdentityUI() {
 
     const element =
-        document.getElementById(
-            "identity"
-        );
+        document.getElementById("identity");
 
     if (!element) {
         return;
@@ -938,19 +909,13 @@ function updateIdentityUI() {
 function updateHealthUI() {
 
     const healthElement =
-        document.getElementById(
-            "health"
-        );
+        document.getElementById("health");
 
     const heroHealthElement =
-        document.getElementById(
-            "hero-health"
-        );
+        document.getElementById("hero-health");
 
     const villainHealthElement =
-        document.getElementById(
-            "villain-health"
-        );
+        document.getElementById("villain-health");
 
     if (healthElement) {
 
@@ -977,9 +942,7 @@ function updateHealthUI() {
 
 function updateCamera() {
 
-    if (
-        currentVehicle
-    ) {
+    if (currentVehicle) {
 
         camera.position.x =
             currentVehicle.group.position.x;
@@ -1019,37 +982,23 @@ function updateCamera() {
 
 function animate() {
 
-    requestAnimationFrame(
-        animate
-    );
+    requestAnimationFrame(animate);
 
-    if (
-        !currentVehicle
-    ) {
+    if (!currentVehicle) {
 
         player.update(keys);
     }
 
     updateBase();
-
     updateNPCJobs();
-
     updateNPCs();
-
     updateVehicles();
-
     updateSkyblade();
-
     updateShadowKing();
-
     updateMission();
-
     updateIdentityUI();
-
     updateHealthUI();
-
     updateCamera();
-
     updateMinimap();
 
     renderer.render(
@@ -1057,10 +1006,6 @@ function animate() {
         camera
     );
 }
-
-// ======================================
-// START GAME
-// ======================================
 
 animate();
 
