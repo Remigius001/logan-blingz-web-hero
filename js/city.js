@@ -11,19 +11,44 @@ export const cities = [
         name: "Central City",
         centerX: 350,
         centerZ: 0
+    },
+    {
+        name: "Metro City",
+        centerX: 700,
+        centerZ: 0
+    },
+    {
+        name: "Ocean City",
+        centerX: 1050,
+        centerZ: 0
+    },
+    {
+        name: "Liberty City",
+        centerX: 0,
+        centerZ: 350
+    },
+    {
+        name: "Neon City",
+        centerX: 350,
+        centerZ: 350
+    },
+    {
+        name: "Mountain City",
+        centerX: 700,
+        centerZ: 350
     }
 ];
 
 export function createCity(scene) {
 
-    // =====================================
-    // HUGE WORLD GROUND
-    // =====================================
+    // ======================================
+    // WORLD GROUND
+    // ======================================
 
     const ground = new THREE.Mesh(
         new THREE.PlaneGeometry(
-            900,
-            500
+            1500,
+            850
         ),
         new THREE.MeshStandardMaterial({
             color: 0x555555
@@ -35,111 +60,113 @@ export function createCity(scene) {
 
     scene.add(ground);
 
-    // =====================================
-    // BLINGZ CITY ROADS
-    // =====================================
+    // ======================================
+    // CREATE ALL CITIES
+    // ======================================
 
-    createCityRoads(
+    for (const city of cities) {
+
+        createCityRoads(
+            scene,
+            city.centerX,
+            city.centerZ
+        );
+
+        createCityParks(
+            scene,
+            city.centerX,
+            city.centerZ
+        );
+
+        createCityLandmarks(
+            scene,
+            city.centerX,
+            city.centerZ
+        );
+    }
+
+    // ======================================
+    // HIGHWAYS BETWEEN CITIES
+    // ======================================
+
+    createHighway(
+        scene,
+        175,
+        0,
+        320,
+        18
+    );
+
+    createHighway(
+        scene,
+        525,
+        0,
+        320,
+        18
+    );
+
+    createHighway(
+        scene,
+        875,
+        0,
+        320,
+        18
+    );
+
+    createHighway(
         scene,
         0,
-        0
+        175,
+        18,
+        320
     );
 
-    // =====================================
-    // CENTRAL CITY ROADS
-    // =====================================
-
-    createCityRoads(
+    createHighway(
         scene,
         350,
-        0
-    );
-
-    // =====================================
-    // HIGHWAY BETWEEN CITIES
-    // =====================================
-
-    const highway = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            320,
-            0.08,
-            18
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x202020
-        })
-    );
-
-    highway.position.set(
         175,
-        0.04,
-        0
+        18,
+        320
     );
 
-    scene.add(highway);
-
-    // =====================================
-    // CENTRAL DIVIDER
-    // =====================================
-
-    const divider = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            320,
-            0.12,
-            0.5
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0xdddddd
-        })
-    );
-
-    divider.position.set(
+    createHighway(
+        scene,
+        700,
         175,
-        0.12,
-        0
+        18,
+        320
     );
 
-    scene.add(divider);
+    // ======================================
+    // DIAGONAL CONNECTIONS
+    // ======================================
 
-    // =====================================
-    // CITY PARKS
-    // =====================================
-
-    createPark(
+    createHighway(
         scene,
-        -110,
-        -110
+        175,
+        175,
+        320,
+        12
     );
 
-    createPark(
+    createHighway(
         scene,
-        110,
-        110
+        525,
+        175,
+        320,
+        12
     );
 
-    createPark(
-        scene,
-        240,
-        -110
-    );
-
-    createPark(
-        scene,
-        460,
-        110
-    );
-
-    // =====================================
+    // ======================================
     // BUILDINGS
-    // =====================================
+    // ======================================
 
     createBuildings(scene);
 }
 
-
-// =========================================
-// CREATE CITY ROADS
-// =========================================
+// ==========================================
+// CITY ROADS
+// ==========================================
 
 function createCityRoads(
     scene,
@@ -160,7 +187,11 @@ function createCityRoads(
         100
     ];
 
-    for (const offset of roadOffsets) {
+    for (
+        const offset of roadOffsets
+    ) {
+
+        // Vertical road
 
         const verticalRoad =
             new THREE.Mesh(
@@ -178,7 +209,11 @@ function createCityRoads(
             centerZ
         );
 
-        scene.add(verticalRoad);
+        scene.add(
+            verticalRoad
+        );
+
+        // Horizontal road
 
         const horizontalRoad =
             new THREE.Mesh(
@@ -196,38 +231,175 @@ function createCityRoads(
             centerZ + offset
         );
 
-        scene.add(horizontalRoad);
+        scene.add(
+            horizontalRoad
+        );
     }
 }
 
+// ==========================================
+// HIGHWAY
+// ==========================================
 
-// =========================================
-// PARK
-// =========================================
-
-function createPark(
+function createHighway(
     scene,
     x,
-    z
+    z,
+    width,
+    depth
 ) {
 
-    const park =
+    const highway =
         new THREE.Mesh(
             new THREE.BoxGeometry(
-                35,
-                0.15,
-                35
+                width,
+                0.08,
+                depth
             ),
             new THREE.MeshStandardMaterial({
-                color: 0x2f8f3a
+                color: 0x202020
             })
         );
 
-    park.position.set(
+    highway.position.set(
         x,
-        0.1,
+        0.04,
         z
     );
 
-    scene.add(park);
+    scene.add(
+        highway
+    );
+
+    // Road divider
+
+    const divider =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                width,
+                0.12,
+                0.5
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0xdddddd
+            })
+        );
+
+    divider.position.set(
+        x,
+        0.12,
+        z
+    );
+
+    scene.add(
+        divider
+    );
+}
+
+// ==========================================
+// PARKS
+// ==========================================
+
+function createCityParks(
+    scene,
+    centerX,
+    centerZ
+) {
+
+    const parkMaterial =
+        new THREE.MeshStandardMaterial({
+            color: 0x2f8f3a
+        });
+
+    const parkPositions = [
+        [-110, -110],
+        [110, 110],
+        [-110, 110],
+        [110, -110]
+    ];
+
+    for (
+        const [x, z]
+        of parkPositions
+    ) {
+
+        const park =
+            new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    35,
+                    0.15,
+                    35
+                ),
+                parkMaterial
+            );
+
+        park.position.set(
+            centerX + x,
+            0.1,
+            centerZ + z
+        );
+
+        scene.add(
+            park
+        );
+    }
+}
+
+// ==========================================
+// CITY LANDMARKS
+// ==========================================
+
+function createCityLandmarks(
+    scene,
+    centerX,
+    centerZ
+) {
+
+    // Central tower
+
+    const tower =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                8,
+                40,
+                8
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x777777
+            })
+        );
+
+    tower.position.set(
+        centerX,
+        20,
+        centerZ
+    );
+
+    scene.add(
+        tower
+    );
+
+    // Landmark top
+
+    const roof =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                12,
+                2,
+                12
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x333333
+            })
+        );
+
+    roof.position.set(
+        centerX,
+        41,
+        centerZ
+    );
+
+    scene.add(
+        roof
+    );
 }
