@@ -90,9 +90,7 @@ sunlight.position.set(
 
 sunlight.castShadow = true;
 
-scene.add(
-    sunlight
-);
+scene.add(sunlight);
 
 scene.add(
     new THREE.AmbientLight(
@@ -107,10 +105,7 @@ scene.add(
 
 createCity(scene);
 
-// ======================================
-// GUARANTEED GROUND
-// ======================================
-
+// Extra ground
 const emergencyGround =
     new THREE.Mesh(
         new THREE.PlaneGeometry(
@@ -216,16 +211,13 @@ const heroes = [
     titanNova
 ];
 
-// ======================================
-// BACKUP STATE
-// ======================================
-
-let backupHeroes = [];
-
-let backupCallUsed = false;
+// Hide backup heroes until called
+stormKnight.group.visible = false;
+nightflare.group.visible = false;
+titanNova.group.visible = false;
 
 // ======================================
-// VILLAIN
+// VILLAINS
 // ======================================
 
 const shadowKing =
@@ -234,8 +226,72 @@ const shadowKing =
         "Shadow King",
         18,
         0,
-        0x5a1688
+        0x5a1688,
+        120,
+        0.03,
+        15
     );
+
+const ironFang =
+    new Villain(
+        scene,
+        "Iron Fang",
+        30,
+        10,
+        0x444444,
+        150,
+        0.025,
+        18
+    );
+
+const voltViper =
+    new Villain(
+        scene,
+        "Volt Viper",
+        -20,
+        15,
+        0x22aa22,
+        100,
+        0.05,
+        12
+    );
+
+const nightCrusher =
+    new Villain(
+        scene,
+        "Night Crusher",
+        25,
+        -20,
+        0x222222,
+        180,
+        0.02,
+        22
+    );
+
+const frostWarden =
+    new Villain(
+        scene,
+        "Frost Warden",
+        -25,
+        -15,
+        0x4488cc,
+        130,
+        0.035,
+        16
+    );
+
+const villains = [
+    shadowKing,
+    ironFang,
+    voltViper,
+    nightCrusher,
+    frostWarden
+];
+
+// Hide all villains until their mission
+for (const villain of villains) {
+    villain.group.visible = false;
+}
 
 // ======================================
 // VEHICLES
@@ -274,28 +330,31 @@ const vehicles = [
 let currentVehicle = null;
 
 // ======================================
-// MISSION
+// MISSION SYSTEM
 // ======================================
 
 let missionActive = false;
-
 let missionComplete = false;
 
+let currentVillainIndex = 0;
+let currentVillain = null;
+
 // ======================================
-// SKYBLADE CALL
+// BACKUP HERO SYSTEM
+// ======================================
+
+let backupHeroes = [];
+let backupCallUsed = false;
+
+// ======================================
+// CALL UI
 // ======================================
 
 let callActive = false;
-
 let callTimer = 0;
-
 let callMessage = "";
 
 function callHero(hero, message) {
-
-    if (!hero) {
-        return;
-    }
 
     callActive = true;
 
@@ -306,9 +365,7 @@ function callHero(hero, message) {
 
     updateCallUI();
 
-    console.log(
-        callMessage
-    );
+    console.log(callMessage);
 }
 
 function updateCallUI() {
@@ -356,11 +413,95 @@ function updateCallUI() {
 
         messageBox.textContent =
             "";
+
+        if (titleBox) {
+
+            titleBox.textContent =
+                "📞 Hero Calling";
+        }
     }
 }
 
 // ======================================
-// SELECT BACKUP HERO
+// START MISSION
+// ======================================
+
+function startMission() {
+
+    // Finish the previous mission first
+    for (const villain of villains) {
+
+        villain.group.visible = false;
+    }
+
+    // Choose next villain
+    currentVillain =
+        villains[currentVillainIndex];
+
+    currentVillainIndex++;
+
+    if (
+        currentVillainIndex >=
+        villains.length
+    ) {
+
+        currentVillainIndex = 0;
+    }
+
+    // Reset villain
+    currentVillain.health =
+        currentVillain.maxHealth;
+
+    currentVillain.defeated =
+        false;
+
+    currentVillain.injured =
+        false;
+
+    currentVillain.attackCooldown =
+        0;
+
+    currentVillain.group.rotation.set(
+        0,
+        0,
+        0
+    );
+
+    // Put villain near Logan
+    currentVillain.group.position.set(
+        player.group.position.x + 20,
+        0,
+        player.group.position.z
+    );
+
+    currentVillain.group.visible =
+        true;
+
+    // Mission state
+    missionActive = true;
+    missionComplete = false;
+
+    // Reset backup
+    backupHeroes = [];
+    backupCallUsed = false;
+
+    stormKnight.group.visible = false;
+    nightflare.group.visible = false;
+    titanNova.group.visible = false;
+
+    // Skyblade calls Logan
+    callHero(
+        skyblade,
+        `Logan, ${currentVillain.name} is causing trouble. I'm checking another part of the city. Stay alert.`
+    );
+
+    console.log(
+        `Mission started against ${currentVillain.name}.`
+    );
+}
+
+// ======================================
+// CHOOSE BACKUP HERO
 // ======================================
 
 function chooseBackupHero() {
@@ -368,23 +509,23 @@ function chooseBackupHero() {
     const available =
         heroes.filter(
             hero =>
-                !hero.defeated &&
-                hero !== skyblade
+                hero !== skyblade &&
+                !hero.defeated
         );
 
     if (
         available.length === 0
     ) {
+
         return null;
     }
 
-    const index =
+    return available[
         Math.floor(
             Math.random() *
             available.length
-        );
-
-    return available[index];
+        )
+    ];
 }
 
 // ======================================
@@ -394,14 +535,10 @@ function chooseBackupHero() {
 function callBackupHero() {
 
     if (
-        !missionActive
-    ) {
-        return;
-    }
-
-    if (
+        !missionActive ||
         backupCallUsed
     ) {
+
         return;
     }
 
@@ -412,7 +549,7 @@ function callBackupHero() {
 
         callHero(
             skyblade,
-            "There are no available heroes nearby. Keep moving, Logan!"
+            "There are no available heroes nearby. Keep going, Logan."
         );
 
         return;
@@ -421,8 +558,27 @@ function callBackupHero() {
     backupCallUsed =
         true;
 
-    backupHeroes =
-        [hero];
+    backupHeroes = [
+        hero
+    ];
+
+    hero.health =
+        hero.maxHealth;
+
+    hero.energy =
+        hero.maxEnergy;
+
+    hero.defeated =
+        false;
+
+    hero.injured =
+        false;
+
+    hero.group.rotation.set(
+        0,
+        0,
+        0
+    );
 
     hero.group.position.set(
         player.group.position.x - 10,
@@ -435,11 +591,7 @@ function callBackupHero() {
 
     callHero(
         hero,
-        "Logan, I'm on my way. I'll help you with this mission."
-    );
-
-    console.log(
-        `${hero.name} joined Logan's mission.`
+        "Logan, I'm on my way. I'll help you."
     );
 }
 
@@ -458,7 +610,6 @@ const minimapContext =
         : null;
 
 const MAP_WIDTH = 220;
-
 const MAP_HEIGHT = 220;
 
 function mapX(worldX) {
@@ -486,9 +637,7 @@ function mapPoint(
     color
 ) {
 
-    if (
-        !minimapContext
-    ) {
+    if (!minimapContext) {
         return;
     }
 
@@ -510,9 +659,7 @@ function mapPoint(
 
 function updateMinimap() {
 
-    if (
-        !minimapContext
-    ) {
+    if (!minimapContext) {
         return;
     }
 
@@ -533,7 +680,7 @@ function updateMinimap() {
         MAP_HEIGHT
     );
 
-    // Blingz City
+    // Cities
 
     minimapContext.fillStyle =
         "#455a64";
@@ -544,8 +691,6 @@ function updateMinimap() {
         90,
         120
     );
-
-    // Central City
 
     minimapContext.fillStyle =
         "#546e7a";
@@ -619,42 +764,7 @@ function updateMinimap() {
         minimapContext.stroke();
     }
 
-    for (
-        let y = 75;
-        y <= 150;
-        y += 25
-    ) {
-
-        minimapContext.beginPath();
-
-        minimapContext.moveTo(
-            10,
-            y
-        );
-
-        minimapContext.lineTo(
-            100,
-            y
-        );
-
-        minimapContext.stroke();
-
-        minimapContext.beginPath();
-
-        minimapContext.moveTo(
-            120,
-            y
-        );
-
-        minimapContext.lineTo(
-            210,
-            y
-        );
-
-        minimapContext.stroke();
-    }
-
-    // City names
+    // Labels
 
     minimapContext.font =
         "bold 11px Arial";
@@ -702,12 +812,7 @@ function updateMinimap() {
             hero.defeated ||
             !hero.group.visible
         ) {
-            continue;
-        }
 
-        if (
-            hero === player
-        ) {
             continue;
         }
 
@@ -715,17 +820,8 @@ function updateMinimap() {
             "#9c4dff";
 
         if (
-            hero === skyblade
-        ) {
-
-            color =
-                "#6633ff";
-        }
-
-        if (
             hero === stormKnight
         ) {
-
             color =
                 "#22aa88";
         }
@@ -733,7 +829,6 @@ function updateMinimap() {
         if (
             hero === nightflare
         ) {
-
             color =
                 "#cc44ff";
         }
@@ -741,9 +836,15 @@ function updateMinimap() {
         if (
             hero === titanNova
         ) {
-
             color =
                 "#ffaa22";
+        }
+
+        if (
+            hero === skyblade
+        ) {
+            color =
+                "#6633ff";
         }
 
         mapPoint(
@@ -754,16 +855,17 @@ function updateMinimap() {
         );
     }
 
-    // Shadow King
+    // Active villain
 
     if (
         missionActive &&
-        !shadowKing.defeated
+        currentVillain &&
+        !currentVillain.defeated
     ) {
 
         mapPoint(
-            shadowKing.group.position.x,
-            shadowKing.group.position.z,
+            currentVillain.group.position.x,
+            currentVillain.group.position.z,
             5,
             "#ff3333"
         );
@@ -798,10 +900,7 @@ window.addEventListener(
 
         keys[key] = true;
 
-        // ==================================
-        // IDENTITY
-        // ==================================
-
+        // Identity
         if (
             key === "i"
         ) {
@@ -811,10 +910,7 @@ window.addEventListener(
             updateIdentityUI();
         }
 
-        // ==================================
-        // VEHICLE ENTER / EXIT
-        // ==================================
-
+        // Enter / exit vehicle
         if (
             key === "e"
         ) {
@@ -883,120 +979,67 @@ window.addEventListener(
             }
         }
 
-        // ==================================
-        // START MISSION
-        // ==================================
-
+        // Start next villain mission
         if (
             key === "m"
         ) {
 
-            missionActive =
-                true;
-
-            missionComplete =
-                false;
-
-            backupCallUsed =
-                false;
-
-            backupHeroes =
-                [];
-
-            // Reset heroes
-            for (
-                const hero of heroes
-            ) {
-
-                if (
-                    hero !== skyblade
-                ) {
-
-                    hero.group.visible =
-                        false;
-                }
-            }
-
-            shadowKing.defeated =
-                false;
-
-            shadowKing.health =
-                shadowKing.maxHealth;
-
-            shadowKing.group.visible =
-                true;
-
-            callHero(
-                skyblade,
-                "Logan, Shadow King is moving in. I'm checking another part of the city. Stay alert."
-            );
+            startMission();
         }
 
-        // ==================================
-        // MANUAL BACKUP REQUEST
-        // ==================================
-
+        // Manual backup
         if (
             key === "h"
         ) {
 
-            if (
-                missionActive
-            ) {
-
-                callBackupHero();
-            }
+            callBackupHero();
         }
 
-        // ==================================
-        // LOGAN ATTACK
-        // ==================================
-
+        // Logan attack
         if (
-            key === "f"
+            key === "f" &&
+            currentVillain
         ) {
 
             const distance =
                 player.group.position.distanceTo(
-                    shadowKing.group.position
+                    currentVillain.group.position
                 );
 
             if (
                 distance < 8 &&
                 !isDefeated(
-                    shadowKing
+                    currentVillain
                 )
             ) {
 
-                shadowKing.takeDamage(
+                currentVillain.takeDamage(
                     20
                 );
             }
         }
 
-        // ==================================
-        // SKYBLADE ATTACK
-        // ==================================
-
+        // Skyblade attack
         if (
-            key === "g"
+            key === "g" &&
+            currentVillain
         ) {
 
             const distance =
                 skyblade.group.position.distanceTo(
-                    shadowKing.group.position
+                    currentVillain.group.position
                 );
 
             if (
                 distance < 10 &&
                 !isDefeated(
-                    shadowKing
+                    currentVillain
                 )
             ) {
 
                 attack(
                     skyblade,
-                    shadowKing,
+                    currentVillain,
                     25
                 );
             }
@@ -1024,6 +1067,7 @@ function updateBase() {
         !base ||
         !base.suitPosition
     ) {
+
         return;
     }
 
@@ -1055,9 +1099,9 @@ function updateNPCs() {
     ) {
 
         if (
-            npc.state ===
-            "working"
+            npc.state === "working"
         ) {
+
             continue;
         }
 
@@ -1127,9 +1171,9 @@ function updateNPCJobs() {
     ) {
 
         if (
-            npc.state !==
-            "working"
+            npc.state !== "working"
         ) {
+
             continue;
         }
 
@@ -1180,15 +1224,15 @@ function updateSkyblade() {
     if (
         skyblade.defeated
     ) {
+
         return;
     }
 
-    // Skyblade does NOT follow Logan
-    // during missions.
-
+    // Skyblade stays away during missions
     if (
         missionActive
     ) {
+
         return;
     }
 
@@ -1213,10 +1257,9 @@ function updateBackupHeroes() {
         if (
             hero.defeated
         ) {
+
             continue;
         }
-
-        // Stay near Logan
 
         const distance =
             hero.group.position.distanceTo(
@@ -1233,23 +1276,26 @@ function updateBackupHeroes() {
             );
         }
 
-        // Attack Shadow King
-
-        const enemyDistance =
-            hero.group.position.distanceTo(
-                shadowKing.group.position
-            );
-
         if (
-            enemyDistance < 9 &&
-            !shadowKing.defeated
+            currentVillain &&
+            !currentVillain.defeated
         ) {
 
-            attack(
-                hero,
-                shadowKing,
-                15
-            );
+            const enemyDistance =
+                hero.group.position.distanceTo(
+                    currentVillain.group.position
+                );
+
+            if (
+                enemyDistance < 9
+            ) {
+
+                attack(
+                    hero,
+                    currentVillain,
+                    15
+                );
+            }
         }
     }
 }
@@ -1261,18 +1307,12 @@ function updateBackupHeroes() {
 function checkForBackupCall() {
 
     if (
-        !missionActive
-    ) {
-        return;
-    }
-
-    if (
+        !missionActive ||
         backupCallUsed
     ) {
+
         return;
     }
-
-    // Logan is struggling
 
     if (
         player.health <= 35
@@ -1283,63 +1323,65 @@ function checkForBackupCall() {
 }
 
 // ======================================
-// SHADOW KING
+// CURRENT VILLAIN AI
 // ======================================
 
-function updateShadowKing() {
-
-    shadowKing.update();
+function updateCurrentVillain() {
 
     if (
         !missionActive ||
-        shadowKing.defeated
+        !currentVillain
     ) {
+
         return;
     }
 
-    shadowKing.moveToward({
+    currentVillain.update();
+
+    if (
+        currentVillain.defeated
+    ) {
+
+        return;
+    }
+
+    currentVillain.moveToward({
         x:
             player.group.position.x,
-
         z:
             player.group.position.z
     });
 
     const distance =
-        shadowKing.group.position.distanceTo(
+        currentVillain.group.position.distanceTo(
             player.group.position
         );
 
     if (
         distance < 5 &&
-        shadowKing.attackCooldown <= 0
+        currentVillain.attackCooldown <= 0
     ) {
 
-        player.health -=
-            5;
+        currentVillain.attack(
+            player,
+            currentVillain.damage
+        );
 
-        if (
-            player.health < 0
-        ) {
-
-            player.health =
-                0;
-        }
-
-        shadowKing.attackCooldown =
+        currentVillain.attackCooldown =
             120;
     }
 }
 
 // ======================================
-// MISSION
+// MISSION COMPLETION
 // ======================================
 
 function updateMission() {
 
     if (
         missionActive &&
-        shadowKing.defeated &&
+        currentVillain &&
+        currentVillain.defeated &&
         !missionComplete
     ) {
 
@@ -1349,18 +1391,10 @@ function updateMission() {
         missionComplete =
             true;
 
-        callActive =
-            true;
-
-        callTimer =
-            300;
-
-        callMessage =
-            "Great work, Logan. The city is safe.";
-
-        updateCallUI();
-
-        // Backup heroes leave after mission
+        callHero(
+            skyblade,
+            `Nice work, Logan. ${currentVillain.name} has been stopped.`
+        );
 
         for (
             const hero of backupHeroes
@@ -1370,8 +1404,7 @@ function updateMission() {
                 false;
         }
 
-        backupHeroes =
-            [];
+        backupHeroes = [];
     }
 }
 
@@ -1384,6 +1417,7 @@ function updateCallTimer() {
     if (
         !callActive
     ) {
+
         return;
     }
 
@@ -1415,6 +1449,7 @@ function updateIdentityUI() {
         );
 
     if (!element) {
+
         return;
     }
 
@@ -1466,8 +1501,18 @@ function updateHealthUI() {
         villainHealthElement
     ) {
 
+        const name =
+            currentVillain
+                ? currentVillain.name
+                : "No Villain";
+
+        const health =
+            currentVillain
+                ? currentVillain.health
+                : 0;
+
         villainHealthElement.textContent =
-            `Shadow King Health: ${shadowKing.health}`;
+            `${name} Health: ${health}`;
     }
 }
 
@@ -1549,9 +1594,9 @@ function animate() {
 
     updateBackupHeroes();
 
-    updateShadowKing();
-
     checkForBackupCall();
+
+    updateCurrentVillain();
 
     updateMission();
 
@@ -1570,10 +1615,6 @@ function animate() {
         camera
     );
 }
-
-// ======================================
-// START
-// ======================================
 
 animate();
 
