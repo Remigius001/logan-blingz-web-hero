@@ -65,7 +65,8 @@ renderer.setPixelRatio(
 
 renderer.shadowMap.enabled = true;
 
-renderer.domElement.id = "gameCanvas";
+renderer.domElement.id =
+    "gameCanvas";
 
 document.body.appendChild(
     renderer.domElement
@@ -89,7 +90,9 @@ sunlight.position.set(
 
 sunlight.castShadow = true;
 
-scene.add(sunlight);
+scene.add(
+    sunlight
+);
 
 scene.add(
     new THREE.AmbientLight(
@@ -104,11 +107,14 @@ scene.add(
 
 createCity(scene);
 
-// Guaranteed ground
+// ======================================
+// GUARANTEED GROUND
+// ======================================
+
 const emergencyGround =
     new THREE.Mesh(
         new THREE.PlaneGeometry(
-            500,
+            900,
             500
         ),
         new THREE.MeshStandardMaterial({
@@ -130,7 +136,8 @@ scene.add(
 // BASE
 // ======================================
 
-const base = createBase(scene);
+const base =
+    createBase(scene);
 
 // ======================================
 // PLAYER
@@ -163,7 +170,7 @@ const npcs =
     createNPCs(scene);
 
 // ======================================
-// SKYBLADE
+// HEROES
 // ======================================
 
 const skyblade =
@@ -175,8 +182,50 @@ const skyblade =
         0x3366ff
     );
 
+const stormKnight =
+    new Hero(
+        scene,
+        "Storm Knight",
+        -10,
+        8,
+        0x22aa88
+    );
+
+const nightflare =
+    new Hero(
+        scene,
+        "Nightflare",
+        12,
+        -8,
+        0x9b44ff
+    );
+
+const titanNova =
+    new Hero(
+        scene,
+        "Titan Nova",
+        -14,
+        -8,
+        0xffaa22
+    );
+
+const heroes = [
+    skyblade,
+    stormKnight,
+    nightflare,
+    titanNova
+];
+
 // ======================================
-// SHADOW KING
+// BACKUP STATE
+// ======================================
+
+let backupHeroes = [];
+
+let backupCallUsed = false;
+
+// ======================================
+// VILLAIN
 // ======================================
 
 const shadowKing =
@@ -229,32 +278,40 @@ let currentVehicle = null;
 // ======================================
 
 let missionActive = false;
+
 let missionComplete = false;
 
 // ======================================
 // SKYBLADE CALL
 // ======================================
 
-let skybladeCallActive = false;
-let skybladeCallTimer = 0;
-let skybladeCallMessage = "";
+let callActive = false;
 
-function callSkyblade(message) {
+let callTimer = 0;
 
-    skybladeCallActive = true;
+let callMessage = "";
 
-    skybladeCallTimer = 360;
+function callHero(hero, message) {
 
-    skybladeCallMessage = message;
+    if (!hero) {
+        return;
+    }
+
+    callActive = true;
+
+    callTimer = 360;
+
+    callMessage =
+        `${hero.name}: ${message}`;
+
+    updateCallUI();
 
     console.log(
-        `Skyblade: ${message}`
+        callMessage
     );
-
-    updateSkybladeCallUI();
 }
 
-function updateSkybladeCallUI() {
+function updateCallUI() {
 
     const callBox =
         document.getElementById(
@@ -266,6 +323,11 @@ function updateSkybladeCallUI() {
             "skyblade-call-message"
         );
 
+    const titleBox =
+        document.getElementById(
+            "skyblade-call-title"
+        );
+
     if (
         !callBox ||
         !messageBox
@@ -273,13 +335,19 @@ function updateSkybladeCallUI() {
         return;
     }
 
-    if (skybladeCallActive) {
+    if (callActive) {
 
         callBox.style.display =
             "block";
 
         messageBox.textContent =
-            skybladeCallMessage;
+            callMessage;
+
+        if (titleBox) {
+
+            titleBox.textContent =
+                "📞 Hero Calling";
+        }
 
     } else {
 
@@ -289,6 +357,90 @@ function updateSkybladeCallUI() {
         messageBox.textContent =
             "";
     }
+}
+
+// ======================================
+// SELECT BACKUP HERO
+// ======================================
+
+function chooseBackupHero() {
+
+    const available =
+        heroes.filter(
+            hero =>
+                !hero.defeated &&
+                hero !== skyblade
+        );
+
+    if (
+        available.length === 0
+    ) {
+        return null;
+    }
+
+    const index =
+        Math.floor(
+            Math.random() *
+            available.length
+        );
+
+    return available[index];
+}
+
+// ======================================
+// CALL BACKUP
+// ======================================
+
+function callBackupHero() {
+
+    if (
+        !missionActive
+    ) {
+        return;
+    }
+
+    if (
+        backupCallUsed
+    ) {
+        return;
+    }
+
+    const hero =
+        chooseBackupHero();
+
+    if (!hero) {
+
+        callHero(
+            skyblade,
+            "There are no available heroes nearby. Keep moving, Logan!"
+        );
+
+        return;
+    }
+
+    backupCallUsed =
+        true;
+
+    backupHeroes =
+        [hero];
+
+    hero.group.position.set(
+        player.group.position.x - 10,
+        0,
+        player.group.position.z + 8
+    );
+
+    hero.group.visible =
+        true;
+
+    callHero(
+        hero,
+        "Logan, I'm on my way. I'll help you with this mission."
+    );
+
+    console.log(
+        `${hero.name} joined Logan's mission.`
+    );
 }
 
 // ======================================
@@ -306,6 +458,7 @@ const minimapContext =
         : null;
 
 const MAP_WIDTH = 220;
+
 const MAP_HEIGHT = 220;
 
 function mapX(worldX) {
@@ -313,7 +466,8 @@ function mapX(worldX) {
     return (
         (worldX + 260) /
         520
-    ) * MAP_WIDTH;
+    ) *
+    MAP_WIDTH;
 }
 
 function mapY(worldZ) {
@@ -321,7 +475,8 @@ function mapY(worldZ) {
     return (
         (worldZ + 260) /
         520
-    ) * MAP_HEIGHT;
+    ) *
+    MAP_HEIGHT;
 }
 
 function mapPoint(
@@ -331,7 +486,9 @@ function mapPoint(
     color
 ) {
 
-    if (!minimapContext) {
+    if (
+        !minimapContext
+    ) {
         return;
     }
 
@@ -353,7 +510,9 @@ function mapPoint(
 
 function updateMinimap() {
 
-    if (!minimapContext) {
+    if (
+        !minimapContext
+    ) {
         return;
     }
 
@@ -375,6 +534,7 @@ function updateMinimap() {
     );
 
     // Blingz City
+
     minimapContext.fillStyle =
         "#455a64";
 
@@ -386,6 +546,7 @@ function updateMinimap() {
     );
 
     // Central City
+
     minimapContext.fillStyle =
         "#546e7a";
 
@@ -397,6 +558,7 @@ function updateMinimap() {
     );
 
     // Highway
+
     minimapContext.fillStyle =
         "#777777";
 
@@ -407,11 +569,13 @@ function updateMinimap() {
         25
     );
 
-    // Road grid
+    // Roads
+
     minimapContext.strokeStyle =
         "#9e9e9e";
 
-    minimapContext.lineWidth = 2;
+    minimapContext.lineWidth =
+        2;
 
     for (
         let x = 25;
@@ -490,6 +654,8 @@ function updateMinimap() {
         minimapContext.stroke();
     }
 
+    // City names
+
     minimapContext.font =
         "bold 11px Arial";
 
@@ -509,6 +675,7 @@ function updateMinimap() {
     );
 
     // Base
+
     mapPoint(
         -60,
         -55,
@@ -517,6 +684,7 @@ function updateMinimap() {
     );
 
     // Logan
+
     mapPoint(
         player.group.position.x,
         player.group.position.z,
@@ -524,23 +692,71 @@ function updateMinimap() {
         "#00aaff"
     );
 
-    // Skyblade
-    if (
-        skyblade &&
-        !skyblade.defeated
+    // Heroes
+
+    for (
+        const hero of heroes
     ) {
 
+        if (
+            hero.defeated ||
+            !hero.group.visible
+        ) {
+            continue;
+        }
+
+        if (
+            hero === player
+        ) {
+            continue;
+        }
+
+        let color =
+            "#9c4dff";
+
+        if (
+            hero === skyblade
+        ) {
+
+            color =
+                "#6633ff";
+        }
+
+        if (
+            hero === stormKnight
+        ) {
+
+            color =
+                "#22aa88";
+        }
+
+        if (
+            hero === nightflare
+        ) {
+
+            color =
+                "#cc44ff";
+        }
+
+        if (
+            hero === titanNova
+        ) {
+
+            color =
+                "#ffaa22";
+        }
+
         mapPoint(
-            skyblade.group.position.x,
-            skyblade.group.position.z,
+            hero.group.position.x,
+            hero.group.position.z,
             4,
-            "#9c4dff"
+            color
         );
     }
 
     // Shadow King
+
     if (
-        shadowKing &&
         missionActive &&
         !shadowKing.defeated
     ) {
@@ -554,9 +770,10 @@ function updateMinimap() {
     }
 
     minimapContext.strokeStyle =
-        "#ffffff";
+        "white";
 
-    minimapContext.lineWidth = 2;
+    minimapContext.lineWidth =
+        2;
 
     minimapContext.strokeRect(
         1,
@@ -574,7 +791,7 @@ const keys = {};
 
 window.addEventListener(
     "keydown",
-    (event) => {
+    event => {
 
         const key =
             event.key.toLowerCase();
@@ -585,7 +802,9 @@ window.addEventListener(
         // IDENTITY
         // ==================================
 
-        if (key === "i") {
+        if (
+            key === "i"
+        ) {
 
             identity.toggleIdentity();
 
@@ -593,12 +812,16 @@ window.addEventListener(
         }
 
         // ==================================
-        // VEHICLE
+        // VEHICLE ENTER / EXIT
         // ==================================
 
-        if (key === "e") {
+        if (
+            key === "e"
+        ) {
 
-            if (currentVehicle) {
+            if (
+                currentVehicle
+            ) {
 
                 currentVehicle.exit();
 
@@ -618,7 +841,8 @@ window.addEventListener(
                 return;
             }
 
-            let nearestVehicle = null;
+            let nearestVehicle =
+                null;
 
             let nearestDistance =
                 Infinity;
@@ -663,12 +887,35 @@ window.addEventListener(
         // START MISSION
         // ==================================
 
-        if (key === "m") {
+        if (
+            key === "m"
+        ) {
 
-            missionActive = true;
+            missionActive =
+                true;
 
             missionComplete =
                 false;
+
+            backupCallUsed =
+                false;
+
+            backupHeroes =
+                [];
+
+            // Reset heroes
+            for (
+                const hero of heroes
+            ) {
+
+                if (
+                    hero !== skyblade
+                ) {
+
+                    hero.group.visible =
+                        false;
+                }
+            }
 
             shadowKing.defeated =
                 false;
@@ -679,22 +926,35 @@ window.addEventListener(
             shadowKing.group.visible =
                 true;
 
-            // Skyblade is no longer beside Logan
-            // during a mission.
-            callSkyblade(
-                "Logan, Shadow King is moving in. I'm checking another part of the city. Stay alert and call me if you need backup."
+            callHero(
+                skyblade,
+                "Logan, Shadow King is moving in. I'm checking another part of the city. Stay alert."
             );
+        }
 
-            console.log(
-                "Mission started."
-            );
+        // ==================================
+        // MANUAL BACKUP REQUEST
+        // ==================================
+
+        if (
+            key === "h"
+        ) {
+
+            if (
+                missionActive
+            ) {
+
+                callBackupHero();
+            }
         }
 
         // ==================================
         // LOGAN ATTACK
         // ==================================
 
-        if (key === "f") {
+        if (
+            key === "f"
+        ) {
 
             const distance =
                 player.group.position.distanceTo(
@@ -718,7 +978,9 @@ window.addEventListener(
         // SKYBLADE ATTACK
         // ==================================
 
-        if (key === "g") {
+        if (
+            key === "g"
+        ) {
 
             const distance =
                 skyblade.group.position.distanceTo(
@@ -744,7 +1006,7 @@ window.addEventListener(
 
 window.addEventListener(
     "keyup",
-    (event) => {
+    event => {
 
         keys[
             event.key.toLowerCase()
@@ -921,20 +1183,103 @@ function updateSkyblade() {
         return;
     }
 
-    // During a mission Skyblade DOES NOT
-    // follow Logan.
+    // Skyblade does NOT follow Logan
+    // during missions.
+
     if (
         missionActive
     ) {
-
         return;
     }
 
-    // Outside missions he follows Logan.
     skyblade.moveToward(
         player.group.position.x + 5,
         player.group.position.z + 3
     );
+}
+
+// ======================================
+// BACKUP HEROES
+// ======================================
+
+function updateBackupHeroes() {
+
+    for (
+        const hero of backupHeroes
+    ) {
+
+        hero.update();
+
+        if (
+            hero.defeated
+        ) {
+            continue;
+        }
+
+        // Stay near Logan
+
+        const distance =
+            hero.group.position.distanceTo(
+                player.group.position
+            );
+
+        if (
+            distance > 7
+        ) {
+
+            hero.moveToward(
+                player.group.position.x - 5,
+                player.group.position.z + 4
+            );
+        }
+
+        // Attack Shadow King
+
+        const enemyDistance =
+            hero.group.position.distanceTo(
+                shadowKing.group.position
+            );
+
+        if (
+            enemyDistance < 9 &&
+            !shadowKing.defeated
+        ) {
+
+            attack(
+                hero,
+                shadowKing,
+                15
+            );
+        }
+    }
+}
+
+// ======================================
+// AUTOMATIC BACKUP
+// ======================================
+
+function checkForBackupCall() {
+
+    if (
+        !missionActive
+    ) {
+        return;
+    }
+
+    if (
+        backupCallUsed
+    ) {
+        return;
+    }
+
+    // Logan is struggling
+
+    if (
+        player.health <= 35
+    ) {
+
+        callBackupHero();
+    }
 }
 
 // ======================================
@@ -953,8 +1298,11 @@ function updateShadowKing() {
     }
 
     shadowKing.moveToward({
-        x: player.group.position.x,
-        z: player.group.position.z
+        x:
+            player.group.position.x,
+
+        z:
+            player.group.position.z
     });
 
     const distance =
@@ -967,13 +1315,15 @@ function updateShadowKing() {
         shadowKing.attackCooldown <= 0
     ) {
 
-        player.health -= 5;
+        player.health -=
+            5;
 
         if (
             player.health < 0
         ) {
 
-            player.health = 0;
+            player.health =
+                0;
         }
 
         shadowKing.attackCooldown =
@@ -999,38 +1349,58 @@ function updateMission() {
         missionComplete =
             true;
 
-        callSkyblade(
-            "Nice work, Logan. Shadow King is down. I'll meet you later."
-        );
+        callActive =
+            true;
+
+        callTimer =
+            300;
+
+        callMessage =
+            "Great work, Logan. The city is safe.";
+
+        updateCallUI();
+
+        // Backup heroes leave after mission
+
+        for (
+            const hero of backupHeroes
+        ) {
+
+            hero.group.visible =
+                false;
+        }
+
+        backupHeroes =
+            [];
     }
 }
 
 // ======================================
-// SKYBLADE CALL TIMER
+// CALL TIMER
 // ======================================
 
-function updateSkybladeCall() {
+function updateCallTimer() {
 
     if (
-        !skybladeCallActive
+        !callActive
     ) {
         return;
     }
 
-    skybladeCallTimer--;
+    callTimer--;
 
     if (
-        skybladeCallTimer <= 0
+        callTimer <= 0
     ) {
 
-        skybladeCallActive =
+        callActive =
             false;
 
-        skybladeCallMessage =
+        callMessage =
             "";
     }
 
-    updateSkybladeCallUI();
+    updateCallUI();
 }
 
 // ======================================
@@ -1168,16 +1538,31 @@ function animate() {
     }
 
     updateBase();
+
     updateNPCJobs();
+
     updateNPCs();
+
     updateVehicles();
+
     updateSkyblade();
+
+    updateBackupHeroes();
+
     updateShadowKing();
+
+    checkForBackupCall();
+
     updateMission();
-    updateSkybladeCall();
+
+    updateCallTimer();
+
     updateIdentityUI();
+
     updateHealthUI();
+
     updateCamera();
+
     updateMinimap();
 
     renderer.render(
@@ -1185,6 +1570,10 @@ function animate() {
         camera
     );
 }
+
+// ======================================
+// START
+// ======================================
 
 animate();
 
