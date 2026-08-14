@@ -1,29 +1,55 @@
-export function attack(attacker, defender) {
+export function attack(attacker, defender, damage = 20) {
 
     if (!attacker || !defender) {
-        return;
+        return false;
     }
 
     if (
         attacker.defeated ||
         defender.defeated
     ) {
-        return;
+        return false;
     }
 
-    attacker.attack(defender);
+    if (
+        typeof attacker.attack === "function"
+    ) {
+
+        return attacker.attack(
+            defender,
+            damage
+        );
+    }
+
+    defender.takeDamage(damage);
+
+    return true;
 }
 
-export function recoverCharacter(character) {
+
+export function recoverCharacter(
+    character,
+    amount = 5
+) {
 
     if (!character) {
         return;
     }
 
-    character.recover(5);
+    if (
+        typeof character.recover === "function"
+    ) {
+
+        character.recover(amount);
+    }
 }
 
+
 export function isDefeated(character) {
+
+    if (!character) {
+        return true;
+    }
 
     return character.defeated === true;
 }
