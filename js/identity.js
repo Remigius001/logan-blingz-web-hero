@@ -17,7 +17,41 @@ export class IdentitySystem {
         this.isHero = false;
 
         this.secretIdentitySafe = true;
+
+        // Base state
+        this.inBase = false;
     }
+
+    // ======================================
+    // BASE
+    // ======================================
+
+    enterBase() {
+
+        this.inBase = true;
+
+        console.log(
+            "Logan entered his base."
+        );
+    }
+
+    leaveBase() {
+
+        this.inBase = false;
+
+        console.log(
+            "Logan left his base."
+        );
+    }
+
+    canTransform() {
+
+        return this.inBase;
+    }
+
+    // ======================================
+    // CURRENT IDENTITY
+    // ======================================
 
     getCurrentIdentity() {
 
@@ -26,42 +60,87 @@ export class IdentitySystem {
             : this.normalIdentity;
     }
 
+    // ======================================
+    // TRANSFORM
+    // ======================================
+
     transformToHero() {
+
+        if (!this.inBase) {
+
+            console.log(
+                "Logan must be inside his base to put on the hero suit."
+            );
+
+            return false;
+        }
 
         this.isHero = true;
 
         console.log(
-            "Logan changed into his hero identity."
+            "Logan put on his hero suit."
         );
+
+        return true;
     }
 
     transformToNormal() {
 
+        if (!this.inBase) {
+
+            console.log(
+                "Logan must return to his base to change back."
+            );
+
+            return false;
+        }
+
         this.isHero = false;
 
         console.log(
-            "Logan returned to his normal identity."
+            "Logan changed back to his normal clothes."
         );
+
+        return true;
     }
 
     toggleIdentity() {
 
+        if (!this.inBase) {
+
+            console.log(
+                "Go to Logan's base to change suits."
+            );
+
+            return false;
+        }
+
         if (this.isHero) {
-            this.transformToNormal();
+
+            return this.transformToNormal();
+
         } else {
-            this.transformToHero();
+
+            return this.transformToHero();
         }
     }
 
+    // ======================================
+    // INFORMATION
+    // ======================================
+
     getName() {
+
         return this.getCurrentIdentity().name;
     }
 
     getRole() {
+
         return this.getCurrentIdentity().role;
     }
 
     isSecretIdentitySafe() {
+
         return this.secretIdentitySafe;
     }
 }
