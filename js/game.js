@@ -5,20 +5,22 @@ import { createCity } from "./city.js";
 import { createNPCs } from "./npcs.js";
 import { Vehicle } from "./vehicles.js";
 import { buildingList } from "./buildings.js";
-
+import { Hero } from "./heroes.js";
+import { Villain } from "./villains.js";
+import {
+    attack,
+    recoverCharacter,
+    isDefeated
+} from "./combat.js";
 
 // ======================================
 // SCENE
 // ======================================
 
-const scene =
-    new THREE.Scene();
+const scene = new THREE.Scene();
 
 scene.background =
-    new THREE.Color(
-        0x87ceeb
-    );
-
+    new THREE.Color(0x87ceeb);
 
 // ======================================
 // CAMERA
@@ -33,6 +35,11 @@ const camera =
         2000
     );
 
+camera.position.set(
+    0,
+    5,
+    10
+);
 
 // ======================================
 // RENDERER
@@ -55,10 +62,11 @@ renderer.setPixelRatio(
     )
 );
 
+renderer.shadowMap.enabled = true;
+
 document.body.appendChild(
     renderer.domElement
 );
-
 
 // ======================================
 // LIGHTING
@@ -76,9 +84,9 @@ sunlight.position.set(
     100
 );
 
-scene.add(
-    sunlight
-);
+sunlight.castShadow = true;
+
+scene.add(sunlight);
 
 scene.add(
     new THREE.AmbientLight(
@@ -87,35 +95,51 @@ scene.add(
     )
 );
 
-
 // ======================================
 // CITY
 // ======================================
 
-createCity(
-    scene
-);
-
+createCity(scene);
 
 // ======================================
 // PLAYER
 // ======================================
 
 const player =
-    new Player(
-        scene
-    );
-
+    new Player(scene);
 
 // ======================================
 // NPCS
 // ======================================
 
 const npcs =
-    createNPCs(
-        scene
+    createNPCs(scene);
+
+// ======================================
+// SECOND HERO
+// ======================================
+
+const skyblade =
+    new Hero(
+        scene,
+        "Skyblade",
+        8,
+        4,
+        0x3366ff
     );
 
+// ======================================
+// VILLAIN
+// ======================================
+
+const shadowKing =
+    new Villain(
+        scene,
+        "Shadow King",
+        18,
+        0,
+        0x5a1688
+    );
 
 // ======================================
 // VEHICLES
@@ -125,7 +149,7 @@ const car =
     new Vehicle(
         scene,
         "car",
-        8,
+        5,
         0
     );
 
@@ -133,7 +157,7 @@ const bike =
     new Vehicle(
         scene,
         "bike",
-        14,
+        12,
         0
     );
 
@@ -141,7 +165,7 @@ const jet =
     new Vehicle(
         scene,
         "jet",
-        25,
+        20,
         0
     );
 
@@ -151,9 +175,26 @@ const vehicles = [
     jet
 ];
 
-let currentVehicle =
-    null;
+let currentVehicle = null;
 
+// ======================================
+// MISSION
+// ======================================
+
+let missionActive = false;
+let missionComplete = false;
+
+function startHeroMission() {
+
+    missionActive = true;
+    missionComplete = false;
+
+    shadowKing.group.visible = true;
+
+    console.log(
+        "Mission started: Stop Shadow King."
+    );
+}
 
 // ======================================
 // KEYBOARD
@@ -170,13 +211,13 @@ window.addEventListener(
 
         keys[key] = true;
 
+        // ==================================
         // ENTER / EXIT VEHICLE
+        // ==================================
 
         if (key === "e") {
 
-            if (
-                currentVehicle
-            ) {
+            if (currentVehicle) {
 
                 currentVehicle.exit();
 
@@ -187,17 +228,14 @@ window.addEventListener(
                     currentVehicle.group.position
                 );
 
-                player.group.position.x +=
-                    3;
+                player.group.position.x += 3;
 
-                currentVehicle =
-                    null;
+                currentVehicle = null;
 
                 return;
             }
 
-            let nearestVehicle =
-                null;
+            let nearestVehicle = null;
 
             let nearestDistance =
                 Infinity;
@@ -224,9 +262,7 @@ window.addEventListener(
                 }
             }
 
-            if (
-                nearestVehicle
-            ) {
+            if (nearestVehicle) {
 
                 currentVehicle =
                     nearestVehicle;
@@ -237,9 +273,107 @@ window.addEventListener(
                     false;
             }
         }
+
+        // ==================================
+        // F = LOGAN ATTACK
+        // ==================================
+
+        if (key === "f") {
+
+            const distance =
+                player.group.position.distanceTo(
+                    shadowKing.group.position
+                );
+
+            if (
+                distance < 8 &&
+                !isDefeated(shadowKing)
+            ) {
+
+                // Player currently uses the
+                // same combat idea as the hero.
+                shadowKing.takeDamage(20);
+
+                console.log(
+                    "Logan attacked Shadow King."
+                );
+            }
+        }
+
+        // ==================================
+        // G = SKYBLADE ATTACKS
+        // ==================================
+
+        if (key === "g") {
+
+            const distance =
+                skyblade.group.position.distanceTo(
+                    shadowKing.group.position
+                );
+
+            if (
+                distance < 10 &&
+                !isDefeated(shadowKing)
+            ) {
+
+                attack(
+                    skyblade,
+                    shadowKing,
+                    25
+                );
+            }
+        }
+
+        // ==================================
+        // H = VILLAIN ATTACKS LOGAN
+        // ==================================
+
+        if (key === "h") {
+
+            const distance =
+                shadowKing.group.position.distanceTo(
+                    player.group.position
+                );
+
+            if (
+                distance < 10
+            ) {
+
+                // Player fallback/player class
+                // needs a health value.
+                if (
+                    typeof player.health !==
+                    "number"
+                ) {
+
+                    player.health = 100;
+                }
+
+                player.health -= 15;
+
+                if (
+                    player.health < 0
+                ) {
+
+                    player.health = 0;
+                }
+
+                console.log(
+                    "Logan took damage."
+                );
+            }
+        }
+
+        // ==================================
+        // M = START MISSION
+        // ==================================
+
+        if (key === "m") {
+
+            startHeroMission();
+        }
     }
 );
-
 
 window.addEventListener(
     "keyup",
@@ -251,42 +385,8 @@ window.addEventListener(
     }
 );
 
-
 // ======================================
-// FIND WORKPLACE
-// ======================================
-
-function findWorkplace(
-    npc
-) {
-
-    const matching =
-        buildingList.filter(
-            building =>
-                building.workplace ===
-                npc.job &&
-                building.city ===
-                npc.homeCity
-        );
-
-    if (
-        matching.length === 0
-    ) {
-
-        return null;
-    }
-
-    return matching[
-        Math.floor(
-            Math.random() *
-            matching.length
-        )
-    ];
-}
-
-
-// ======================================
-// NPC JOB SYSTEM
+// NPC JOBS
 // ======================================
 
 function updateNPCJobs() {
@@ -295,24 +395,8 @@ function updateNPCJobs() {
         const npc of npcs
     ) {
 
-        // Assign workplace
         if (
-            !npc.workplace
-        ) {
-
-            npc.workplace =
-                findWorkplace(
-                    npc
-                );
-        }
-
-        // ==================================
-        // WORKING
-        // ==================================
-
-        if (
-            npc.state ===
-            "working"
+            npc.state === "working"
         ) {
 
             npc.workTimer--;
@@ -322,15 +406,10 @@ function updateNPCJobs() {
             ) {
 
                 npc.state =
-                    "goingHome";
+                    "goingToWork";
 
                 npc.object.visible =
                     true;
-
-                npc.direction =
-                    Math.random() *
-                    Math.PI *
-                    2;
 
                 npc.workTimer =
                     600 +
@@ -341,152 +420,47 @@ function updateNPCJobs() {
             continue;
         }
 
-        // ==================================
-        // GO TO WORK
-        // ==================================
-
         if (
-            npc.state ===
-            "goingToWork"
+            npc.state === "goingToWork" &&
+            npc.workplace
         ) {
-
-            if (
-                npc.workplace
-            ) {
-
-                const dx =
-                    npc.workplace.x -
-                    npc.object.position.x;
-
-                const dz =
-                    npc.workplace.z -
-                    npc.object.position.z;
-
-                const distance =
-                    Math.sqrt(
-                        dx * dx +
-                        dz * dz
-                    );
-
-                npc.direction =
-                    Math.atan2(
-                        dz,
-                        dx
-                    );
-
-                if (
-                    distance < 4
-                ) {
-
-                    npc.state =
-                        "working";
-
-                    npc.object.visible =
-                        false;
-                }
-            }
-        }
-
-        // ==================================
-        // GO HOME
-        // ==================================
-
-        if (
-            npc.state ===
-            "goingHome"
-        ) {
-
-            const targetX =
-                npc.homeCity ===
-                "Blingz City"
-                    ? 0
-                    : 350;
 
             const dx =
-                targetX -
+                npc.workplace.x -
                 npc.object.position.x;
 
+            const dz =
+                npc.workplace.z -
+                npc.object.position.z;
+
+            const distance =
+                Math.sqrt(
+                    dx * dx +
+                    dz * dz
+                );
+
             npc.direction =
-                dx >= 0
-                    ? 0
-                    : Math.PI;
+                Math.atan2(
+                    dz,
+                    dx
+                );
 
             if (
-                Math.abs(dx) < 5
+                distance < 4
             ) {
 
                 npc.state =
-                    "goingToWork";
-            }
-        }
+                    "working";
 
-        // ==================================
-        // RANDOM CITY TRAVEL
-        // ==================================
-
-        if (
-            Math.random() < 0.00015 &&
-            !currentVehicle
-        ) {
-
-            npc.state =
-                "travelling";
-
-            npc.destinationCity =
-                npc.currentCity ===
-                "Blingz City"
-                    ? "Central City"
-                    : "Blingz City";
-        }
-
-        // ==================================
-        // CITY TRAVEL
-        // ==================================
-
-        if (
-            npc.state ===
-            "travelling"
-        ) {
-
-            const targetX =
-                npc.destinationCity ===
-                "Central City"
-                    ? 350
-                    : 0;
-
-            const dx =
-                targetX -
-                npc.object.position.x;
-
-            npc.direction =
-                dx >= 0
-                    ? 0
-                    : Math.PI;
-
-            npc.object.position.x +=
-                Math.cos(
-                    npc.direction
-                ) *
-                npc.speed *
-                2;
-
-            if (
-                Math.abs(dx) < 5
-            ) {
-
-                npc.currentCity =
-                    npc.destinationCity;
-
-                npc.state =
-                    "goingToWork";
+                npc.object.visible =
+                    false;
             }
         }
     }
 }
 
-
 // ======================================
-// NORMAL NPC MOVEMENT
+// NPC MOVEMENT
 // ======================================
 
 function updateNPCs() {
@@ -496,16 +470,7 @@ function updateNPCs() {
     ) {
 
         if (
-            npc.state ===
-            "working"
-        ) {
-
-            continue;
-        }
-
-        if (
-            npc.state ===
-            "travelling"
+            npc.state === "working"
         ) {
 
             continue;
@@ -549,16 +514,13 @@ function updateNPCs() {
     }
 }
 
-
 // ======================================
 // VEHICLES
 // ======================================
 
 function updateVehicles() {
 
-    if (
-        currentVehicle
-    ) {
+    if (currentVehicle) {
 
         currentVehicle.update(
             keys
@@ -566,28 +528,188 @@ function updateVehicles() {
     }
 }
 
-
 // ======================================
-// PLAYER CITY TRAVEL
+// HERO
 // ======================================
 
-function updatePlayerTravel() {
+function updateHero() {
 
-    // Highway area between cities
-    // Blingz City ends around x=150
-    // Central City begins around x=250
+    skyblade.update();
 
+    // Simple partner follow
     if (
-        player.group.position.x > 170 &&
-        player.group.position.x < 180
+        !skyblade.defeated
     ) {
 
+        const targetX =
+            player.group.position.x + 5;
+
+        const targetZ =
+            player.group.position.z + 3;
+
+        skyblade.group.position.x +=
+            (
+                targetX -
+                skyblade.group.position.x
+            ) * 0.02;
+
+        skyblade.group.position.z +=
+            (
+                targetZ -
+                skyblade.group.position.z
+            ) * 0.02;
+    }
+}
+
+// ======================================
+// VILLAIN AI
+// ======================================
+
+function updateVillain() {
+
+    shadowKing.update();
+
+    if (
+        !missionActive ||
+        shadowKing.defeated
+    ) {
+
+        return;
+    }
+
+    const distance =
+        shadowKing.group.position.distanceTo(
+            player.group.position
+        );
+
+    // Move toward Logan
+    if (
+        distance > 4
+    ) {
+
+        const dx =
+            player.group.position.x -
+            shadowKing.group.position.x;
+
+        const dz =
+            player.group.position.z -
+            shadowKing.group.position.z;
+
+        const length =
+            Math.sqrt(
+                dx * dx +
+                dz * dz
+            );
+
+        if (length > 0) {
+
+            shadowKing.group.position.x +=
+                (dx / length) * 0.015;
+
+            shadowKing.group.position.z +=
+                (dz / length) * 0.015;
+        }
+    }
+
+    // Villain attacks after cooldown
+    if (
+        distance < 5
+    ) {
+
+        if (
+            shadowKing.attackCooldown <= 0
+        ) {
+
+            if (
+                typeof player.health !==
+                "number"
+            ) {
+
+                player.health = 100;
+            }
+
+            player.health -= 5;
+
+            if (
+                player.health < 0
+            ) {
+
+                player.health = 0;
+            }
+
+            shadowKing.attackCooldown =
+                120;
+        }
+    }
+}
+
+// ======================================
+// MISSION COMPLETION
+// ======================================
+
+function updateMission() {
+
+    if (
+        missionActive &&
+        shadowKing.defeated &&
+        !missionComplete
+    ) {
+
+        missionComplete = true;
+
+        missionActive = false;
+
         console.log(
-            "Entering the highway to Central City..."
+            "MISSION COMPLETE!"
         );
     }
 }
 
+// ======================================
+// HEALTH UI
+// ======================================
+
+function updateHealthUI() {
+
+    let healthDisplay =
+        document.getElementById(
+            "health"
+        );
+
+    let heroHealthDisplay =
+        document.getElementById(
+            "hero-health"
+        );
+
+    let villainHealthDisplay =
+        document.getElementById(
+            "villain-health"
+        );
+
+    if (healthDisplay) {
+
+        const health =
+            typeof player.health ===
+            "number"
+                ? player.health
+                : 100;
+
+        healthDisplay.textContent =
+            `Logan Health: ${health}`;
+    }
+
+    if (heroHealthDisplay) {
+
+        heroHealthDisplay.textContent =
+            `Skyblade Health: ${skyblade.health}`;
+    }
+
+    if (villainHealthDisplay) {
+
+        villainHealthDisplay.textContent =
+            `Shadow King Health: ${shadowKing.health}`;
+    }
+}
 
 // ======================================
 // CAMERA
@@ -595,9 +717,7 @@ function updatePlayerTravel() {
 
 function updateCamera() {
 
-    if (
-        currentVehicle
-    ) {
+    if (currentVehicle) {
 
         camera.position.x =
             currentVehicle.group.position.x;
@@ -636,7 +756,6 @@ function updateCamera() {
     );
 }
 
-
 // ======================================
 // GAME LOOP
 // ======================================
@@ -662,7 +781,13 @@ function animate() {
 
     updateVehicles();
 
-    updatePlayerTravel();
+    updateHero();
+
+    updateVillain();
+
+    updateMission();
+
+    updateHealthUI();
 
     updateCamera();
 
@@ -672,9 +797,7 @@ function animate() {
     );
 }
 
-
 animate();
-
 
 // ======================================
 // RESIZE
