@@ -1,41 +1,56 @@
 /* =====================================
-   LOGAN BLINGZ - GAME UI
+   LOGAN BLINGZ
    ===================================== */
 
 html,
 body {
     margin: 0;
     padding: 0;
+
     width: 100%;
     height: 100%;
+
     overflow: hidden;
-    font-family: Arial, Helvetica, sans-serif;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
     background: #87ceeb;
 }
 
-/* Three.js canvas */
+/* =====================================
+   THREE.JS CANVAS
+   ===================================== */
 
 canvas {
     display: block;
+
     width: 100%;
     height: 100%;
 }
 
 /* =====================================
-   TITLE
+   GAME TITLE
    ===================================== */
 
 #title {
     position: fixed;
+
     top: 18px;
     left: 50%;
+
     transform: translateX(-50%);
 
     z-index: 100;
 
     color: white;
+
     font-size: 42px;
+
     font-weight: 900;
+
     letter-spacing: 5px;
 
     text-shadow:
@@ -47,12 +62,14 @@ canvas {
 }
 
 /* =====================================
-   HEALTH
+   HEALTH PANELS
    ===================================== */
 
 #health,
 #hero-health,
-#villain-health {
+#villain-health,
+#identity {
+
     position: fixed;
 
     left: 20px;
@@ -63,20 +80,23 @@ canvas {
 
     padding: 10px 15px;
 
-    margin-bottom: 8px;
-
     color: white;
 
     font-size: 18px;
+
     font-weight: bold;
 
-    background: rgba(0, 0, 0, 0.65);
+    background:
+        rgba(0, 0, 0, 0.65);
 
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    border:
+        2px solid
+        rgba(255, 255, 255, 0.4);
 
     border-radius: 8px;
 
-    text-shadow: 1px 1px 2px black;
+    text-shadow:
+        1px 1px 2px black;
 
     pointer-events: none;
 }
@@ -93,11 +113,16 @@ canvas {
     top: 185px;
 }
 
+#identity {
+    top: 235px;
+}
+
 /* =====================================
    CONTROLS
    ===================================== */
 
 #controls {
+
     position: fixed;
 
     right: 20px;
@@ -109,22 +134,27 @@ canvas {
 
     color: white;
 
-    background: rgba(0, 0, 0, 0.7);
+    background:
+        rgba(0, 0, 0, 0.7);
 
-    border: 2px solid rgba(255, 255, 255, 0.35);
+    border:
+        2px solid
+        rgba(255, 255, 255, 0.35);
 
     border-radius: 10px;
 
     font-size: 14px;
+
     line-height: 1.8;
 
-    text-shadow: 1px 1px 2px black;
+    text-shadow:
+        1px 1px 2px black;
 
     pointer-events: none;
 }
 
 /* =====================================
-   SMALL SCREEN
+   SMALL SCREENS
    ===================================== */
 
 @media (max-width: 700px) {
@@ -136,10 +166,15 @@ canvas {
 
     #health,
     #hero-health,
-    #villain-health {
+    #villain-health,
+    #identity {
+
         left: 10px;
+
         min-width: 170px;
+
         font-size: 14px;
+
         padding: 8px 10px;
     }
 
@@ -155,11 +190,19 @@ canvas {
         top: 151px;
     }
 
+    #identity {
+        top: 194px;
+    }
+
     #controls {
+
         right: 10px;
         bottom: 10px;
+
         font-size: 11px;
+
         line-height: 1.5;
+
         padding: 10px;
     }
 }
