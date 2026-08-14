@@ -2,8 +2,13 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.m
 
 export class Hero {
 
-    constructor(scene, name, x, z, color = 0x3366ff) {
-
+    constructor(
+        scene,
+        name,
+        x,
+        z,
+        color = 0x3366ff
+    ) {
         this.scene = scene;
         this.name = name;
 
@@ -20,7 +25,7 @@ export class Hero {
 
         this.group = new THREE.Group();
 
-        // BODY
+        // Body
         const body = new THREE.Mesh(
             new THREE.CapsuleGeometry(
                 0.4,
@@ -29,14 +34,14 @@ export class Hero {
                 16
             ),
             new THREE.MeshStandardMaterial({
-                color
+                color: color
             })
         );
 
         body.position.y = 1.4;
         this.group.add(body);
 
-        // HEAD
+        // Head
         const head = new THREE.Mesh(
             new THREE.SphereGeometry(
                 0.42,
@@ -51,10 +56,10 @@ export class Hero {
         head.position.y = 2.45;
         this.group.add(head);
 
-        // LEFT ARM
+        // Left arm
         const armMaterial =
             new THREE.MeshStandardMaterial({
-                color
+                color: color
             });
 
         const leftArm = new THREE.Mesh(
@@ -75,14 +80,12 @@ export class Hero {
 
         this.group.add(leftArm);
 
-        // RIGHT ARM
+        // Right arm
         const rightArm = leftArm.clone();
-
         rightArm.position.x = 0.52;
-
         this.group.add(rightArm);
 
-        // LEFT LEG
+        // Left leg
         const legMaterial =
             new THREE.MeshStandardMaterial({
                 color: 0x222222
@@ -106,11 +109,9 @@ export class Hero {
 
         this.group.add(leftLeg);
 
-        // RIGHT LEG
+        // Right leg
         const rightLeg = leftLeg.clone();
-
         rightLeg.position.x = 0.2;
-
         this.group.add(rightLeg);
 
         this.group.position.set(
@@ -122,6 +123,54 @@ export class Hero {
         scene.add(this.group);
     }
 
+    moveToward(x, z) {
+
+        if (this.defeated) {
+            return;
+        }
+
+        const dx =
+            x - this.group.position.x;
+
+        const dz =
+            z - this.group.position.z;
+
+        const distance =
+            Math.sqrt(
+                dx * dx +
+                dz * dz
+            );
+
+        if (distance < 0.15) {
+            return;
+        }
+
+        const directionX =
+            dx / distance;
+
+        const directionZ =
+            dz / distance;
+
+        this.group.position.x +=
+            directionX * this.speed;
+
+        this.group.position.z +=
+            directionZ * this.speed;
+
+        const targetRotation =
+            Math.atan2(
+                directionX,
+                directionZ
+            );
+
+        this.group.rotation.y =
+            THREE.MathUtils.lerp(
+                this.group.rotation.y,
+                targetRotation,
+                0.15
+            );
+    }
+
     takeDamage(amount) {
 
         if (this.defeated) {
@@ -130,25 +179,20 @@ export class Hero {
 
         this.health -= amount;
 
-        if (this.health < 0) {
-            this.health = 0;
-        }
+        this.health =
+            Math.max(
+                0,
+                this.health
+            );
 
         if (this.health <= 50) {
             this.injured = true;
-            this.group.rotation.z = 0.08;
         }
 
         if (this.health === 0) {
-
             this.defeated = true;
             this.injured = true;
-
             this.group.rotation.x = -0.45;
-
-            console.log(
-                `${this.name} has been defeated.`
-            );
         }
     }
 
@@ -160,12 +204,15 @@ export class Hero {
 
         this.health += amount;
 
-        if (this.health > this.maxHealth) {
-            this.health = this.maxHealth;
-        }
+        this.health =
+            Math.min(
+                this.maxHealth,
+                this.health
+            );
 
         if (this.health > 50) {
             this.injured = false;
+            this.group.rotation.x = 0;
             this.group.rotation.z = 0;
         }
     }
@@ -174,6 +221,7 @@ export class Hero {
 
         if (
             this.defeated ||
+            !target ||
             target.defeated
         ) {
             return false;
@@ -198,8 +246,10 @@ export class Hero {
 
         this.energy += 0.25;
 
-        if (this.energy > this.maxEnergy) {
-            this.energy = this.maxEnergy;
-        }
+        this.energy =
+            Math.min(
+                this.maxEnergy,
+                this.energy
+            );
     }
 }
