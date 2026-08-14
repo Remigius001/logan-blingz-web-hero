@@ -7,6 +7,7 @@ import { Vehicle } from "./vehicles.js";
 import { Hero } from "./heroes.js";
 import { Villain } from "./villains.js";
 import { IdentitySystem } from "./identity.js";
+import { createBase } from "./base.js";
 import {
     attack,
     isDefeated
@@ -18,36 +19,28 @@ import {
 
 const scene = new THREE.Scene();
 
-scene.background =
-    new THREE.Color(0x87ceeb);
+scene.background = new THREE.Color(0x87ceeb);
 
 // ======================================
 // CAMERA
 // ======================================
 
-const camera =
-    new THREE.PerspectiveCamera(
-        70,
-        window.innerWidth /
-        window.innerHeight,
-        0.1,
-        2000
-    );
-
-camera.position.set(
-    0,
-    5,
-    10
+const camera = new THREE.PerspectiveCamera(
+    70,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    2000
 );
+
+camera.position.set(0, 5, 10);
 
 // ======================================
 // RENDERER
 // ======================================
 
-const renderer =
-    new THREE.WebGLRenderer({
-        antialias: true
-    });
+const renderer = new THREE.WebGLRenderer({
+    antialias: true
+});
 
 renderer.setSize(
     window.innerWidth,
@@ -55,10 +48,7 @@ renderer.setSize(
 );
 
 renderer.setPixelRatio(
-    Math.min(
-        window.devicePixelRatio,
-        2
-    )
+    Math.min(window.devicePixelRatio, 2)
 );
 
 renderer.shadowMap.enabled = true;
@@ -71,11 +61,10 @@ document.body.appendChild(
 // LIGHTING
 // ======================================
 
-const sunlight =
-    new THREE.DirectionalLight(
-        0xffffff,
-        4
-    );
+const sunlight = new THREE.DirectionalLight(
+    0xffffff,
+    4
+);
 
 sunlight.position.set(
     100,
@@ -101,83 +90,83 @@ scene.add(
 createCity(scene);
 
 // ======================================
+// BASE
+// ======================================
+
+const base = createBase(scene);
+
+// ======================================
 // PLAYER
 // ======================================
 
-const player =
-    new Player(scene);
+const player = new Player(scene);
 
 if (typeof player.health !== "number") {
     player.health = 100;
 }
 
+player.maxHealth = 100;
+
 // ======================================
 // IDENTITY
 // ======================================
 
-const identity =
-    new IdentitySystem(player);
+const identity = new IdentitySystem(player);
 
 // ======================================
 // NPCS
 // ======================================
 
-const npcs =
-    createNPCs(scene);
+const npcs = createNPCs(scene);
 
 // ======================================
-// HERO
+// SECOND HERO
 // ======================================
 
-const skyblade =
-    new Hero(
-        scene,
-        "Skyblade",
-        8,
-        4,
-        0x3366ff
-    );
+const skyblade = new Hero(
+    scene,
+    "Skyblade",
+    8,
+    4,
+    0x3366ff
+);
 
 // ======================================
 // VILLAIN
 // ======================================
 
-const shadowKing =
-    new Villain(
-        scene,
-        "Shadow King",
-        18,
-        0,
-        0x5a1688
-    );
+const shadowKing = new Villain(
+    scene,
+    "Shadow King",
+    18,
+    0,
+    0x5a1688
+);
 
 // ======================================
 // VEHICLES
 // ======================================
 
-const car =
-    new Vehicle(
-        scene,
-        "car",
-        5,
-        0
-    );
+const car = new Vehicle(
+    scene,
+    "car",
+    5,
+    0
+);
 
-const bike =
-    new Vehicle(
-        scene,
-        "bike",
-        12,
-        0
-    );
+const bike = new Vehicle(
+    scene,
+    "bike",
+    12,
+    0
+);
 
-const jet =
-    new Vehicle(
-        scene,
-        "jet",
-        20,
-        0
-    );
+const jet = new Vehicle(
+    scene,
+    "jet",
+    20,
+    0
+);
 
 const vehicles = [
     car,
@@ -195,6 +184,304 @@ let missionActive = false;
 let missionComplete = false;
 
 // ======================================
+// MINIMAP
+// ======================================
+
+const minimap =
+    document.getElementById("minimap");
+
+const minimapContext =
+    minimap
+        ? minimap.getContext("2d")
+        : null;
+
+const MINIMAP_SIZE = 220;
+const WORLD_MIN = -260;
+const WORLD_SIZE = 520;
+
+function worldToMap(x, z) {
+
+    return {
+        x:
+            ((x - WORLD_MIN) /
+                WORLD_SIZE) *
+            MINIMAP_SIZE,
+
+        y:
+            ((z - WORLD_MIN) /
+                WORLD_SIZE) *
+            MINIMAP_SIZE
+    };
+}
+
+function drawMapPoint(
+    x,
+    z,
+    radius,
+    color
+) {
+
+    if (!minimapContext) {
+        return;
+    }
+
+    const point = worldToMap(x, z);
+
+    minimapContext.beginPath();
+
+    minimapContext.arc(
+        point.x,
+        point.y,
+        radius,
+        0,
+        Math.PI * 2
+    );
+
+    minimapContext.fillStyle = color;
+
+    minimapContext.fill();
+}
+
+function updateMinimap() {
+
+    if (!minimapContext) {
+        return;
+    }
+
+    // Background
+
+    minimapContext.fillStyle =
+        "#20262b";
+
+    minimapContext.fillRect(
+        0,
+        0,
+        MINIMAP_SIZE,
+        MINIMAP_SIZE
+    );
+
+    // ==================================
+    // BLINGZ CITY
+    // ==================================
+
+    minimapContext.fillStyle =
+        "#3f474e";
+
+    minimapContext.fillRect(
+        10,
+        45,
+        90,
+        120
+    );
+
+    // ==================================
+    // CENTRAL CITY
+    // ==================================
+
+    minimapContext.fillRect(
+        120,
+        45,
+        90,
+        120
+    );
+
+    // ==================================
+    // HIGHWAY
+    // ==================================
+
+    minimapContext.fillStyle =
+        "#666666";
+
+    minimapContext.fillRect(
+        95,
+        95,
+        30,
+        25
+    );
+
+    // ==================================
+    // ROAD GRID
+    // ==================================
+
+    minimapContext.strokeStyle =
+        "#858585";
+
+    minimapContext.lineWidth = 2;
+
+    for (
+        let x = 25;
+        x <= 85;
+        x += 30
+    ) {
+
+        minimapContext.beginPath();
+
+        minimapContext.moveTo(
+            x,
+            45
+        );
+
+        minimapContext.lineTo(
+            x,
+            165
+        );
+
+        minimapContext.stroke();
+    }
+
+    for (
+        let x = 135;
+        x <= 195;
+        x += 30
+    ) {
+
+        minimapContext.beginPath();
+
+        minimapContext.moveTo(
+            x,
+            45
+        );
+
+        minimapContext.lineTo(
+            x,
+            165
+        );
+
+        minimapContext.stroke();
+    }
+
+    for (
+        let y = 75;
+        y <= 150;
+        y += 25
+    ) {
+
+        minimapContext.beginPath();
+
+        minimapContext.moveTo(
+            10,
+            y
+        );
+
+        minimapContext.lineTo(
+            100,
+            y
+        );
+
+        minimapContext.stroke();
+
+        minimapContext.beginPath();
+
+        minimapContext.moveTo(
+            120,
+            y
+        );
+
+        minimapContext.lineTo(
+            210,
+            y
+        );
+
+        minimapContext.stroke();
+    }
+
+    // ==================================
+    // CITY NAMES
+    // ==================================
+
+    minimapContext.font =
+        "bold 11px Arial";
+
+    minimapContext.fillStyle =
+        "white";
+
+    minimapContext.fillText(
+        "BLINGZ",
+        20,
+        35
+    );
+
+    minimapContext.fillText(
+        "CENTRAL",
+        135,
+        35
+    );
+
+    // ==================================
+    // BASE
+    // ==================================
+
+    drawMapPoint(
+        -60,
+        -55,
+        5,
+        "#22cc55"
+    );
+
+    // ==================================
+    // LOGAN
+    // ==================================
+
+    drawMapPoint(
+        player.group.position.x,
+        player.group.position.z,
+        6,
+        "#2196ff"
+    );
+
+    // ==================================
+    // SKYBLADE
+    // ==================================
+
+    if (
+        skyblade &&
+        !skyblade.defeated
+    ) {
+
+        drawMapPoint(
+            skyblade.group.position.x,
+            skyblade.group.position.z,
+            4,
+            "#8844ff"
+        );
+    }
+
+    // ==================================
+    // SHADOW KING
+    // ==================================
+
+    if (
+        shadowKing &&
+        missionActive &&
+        !shadowKing.defeated
+    ) {
+
+        drawMapPoint(
+            shadowKing.group.position.x,
+            shadowKing.group.position.z,
+            5,
+            "#ff3333"
+        );
+    }
+
+    // ==================================
+    // BORDER
+    // ==================================
+
+    minimapContext.strokeStyle =
+        "white";
+
+    minimapContext.lineWidth = 2;
+
+    minimapContext.strokeRect(
+        1,
+        1,
+        MINIMAP_SIZE - 2,
+        MINIMAP_SIZE - 2
+    );
+}
+
+// ======================================
 // KEYBOARD
 // ======================================
 
@@ -210,22 +497,14 @@ window.addEventListener(
         keys[key] = true;
 
         // ==================================
-        // CHANGE IDENTITY
+        // IDENTITY
         // ==================================
 
         if (key === "i") {
 
-            if (!currentVehicle) {
+            identity.toggleIdentity();
 
-                identity.toggleIdentity();
-
-                updateIdentityUI();
-
-                console.log(
-                    "Current identity:",
-                    identity.getName()
-                );
-            }
+            updateIdentityUI();
         }
 
         // ==================================
@@ -234,12 +513,13 @@ window.addEventListener(
 
         if (key === "e") {
 
+            // Exit vehicle
+
             if (currentVehicle) {
 
                 currentVehicle.exit();
 
-                player.group.visible =
-                    true;
+                player.group.visible = true;
 
                 player.group.position.copy(
                     currentVehicle.group.position
@@ -252,8 +532,12 @@ window.addEventListener(
                 return;
             }
 
+            // Find nearest vehicle
+
             let nearestVehicle = null;
-            let nearestDistance = Infinity;
+
+            let nearestDistance =
+                Infinity;
 
             for (
                 const vehicle of vehicles
@@ -277,6 +561,8 @@ window.addEventListener(
                 }
             }
 
+            // Enter vehicle
+
             if (nearestVehicle) {
 
                 currentVehicle =
@@ -284,8 +570,7 @@ window.addEventListener(
 
                 currentVehicle.enter();
 
-                player.group.visible =
-                    false;
+                player.group.visible = false;
             }
         }
 
@@ -296,16 +581,18 @@ window.addEventListener(
         if (key === "m") {
 
             missionActive = true;
+
             missionComplete = false;
 
             shadowKing.defeated = false;
+
             shadowKing.health =
                 shadowKing.maxHealth;
 
             shadowKing.group.visible = true;
 
             console.log(
-                "MISSION STARTED: Stop Shadow King!"
+                "Mission started: Stop Shadow King."
             );
         }
 
@@ -326,6 +613,10 @@ window.addEventListener(
             ) {
 
                 shadowKing.takeDamage(20);
+
+                console.log(
+                    "Logan attacked Shadow King."
+                );
             }
         }
 
@@ -366,14 +657,46 @@ window.addEventListener(
 );
 
 // ======================================
+// BASE / TRANSFORMATION
+// ======================================
+
+function updateBase() {
+
+    if (
+        !base ||
+        !base.suitPosition
+    ) {
+        return;
+    }
+
+    const distance =
+        player.group.position.distanceTo(
+            base.suitPosition
+        );
+
+    if (distance < 8) {
+
+        identity.enterBase();
+
+    } else {
+
+        identity.leaveBase();
+    }
+}
+
+// ======================================
 // NPC MOVEMENT
 // ======================================
 
 function updateNPCs() {
 
-    for (const npc of npcs) {
+    for (
+        const npc of npcs
+    ) {
 
-        if (npc.state === "working") {
+        if (
+            npc.state === "working"
+        ) {
             continue;
         }
 
@@ -421,28 +744,31 @@ function updateNPCs() {
 
 function updateNPCJobs() {
 
-    for (const npc of npcs) {
+    for (
+        const npc of npcs
+    ) {
 
         if (
-            npc.state === "working"
+            npc.state !== "working"
+        ) {
+            continue;
+        }
+
+        npc.workTimer--;
+
+        if (
+            npc.workTimer <= 0
         ) {
 
-            npc.workTimer--;
+            npc.state =
+                "goingToWork";
 
-            if (
-                npc.workTimer <= 0
-            ) {
+            npc.object.visible =
+                true;
 
-                npc.state =
-                    "goingToWork";
-
-                npc.object.visible =
-                    true;
-
-                npc.workTimer =
-                    600 +
-                    Math.random() * 600;
-            }
+            npc.workTimer =
+                600 +
+                Math.random() * 600;
         }
     }
 }
@@ -453,11 +779,11 @@ function updateNPCJobs() {
 
 function updateVehicles() {
 
-    if (currentVehicle) {
+    if (
+        currentVehicle
+    ) {
 
-        currentVehicle.update(
-            keys
-        );
+        currentVehicle.update(keys);
     }
 }
 
@@ -514,7 +840,9 @@ function updateShadowKing() {
             player.group.position
         );
 
-    if (distance > 4) {
+    if (
+        distance > 4
+    ) {
 
         const dx =
             player.group.position.x -
@@ -540,6 +868,7 @@ function updateShadowKing() {
         }
     }
 
+    // Villain damages Logan
     if (
         distance < 5 &&
         shadowKing.attackCooldown <= 0
@@ -550,11 +879,11 @@ function updateShadowKing() {
         if (
             player.health < 0
         ) {
+
             player.health = 0;
         }
 
-        shadowKing.attackCooldown =
-            120;
+        shadowKing.attackCooldown = 120;
     }
 }
 
@@ -571,6 +900,7 @@ function updateMission() {
     ) {
 
         missionActive = false;
+
         missionComplete = true;
 
         console.log(
@@ -647,7 +977,9 @@ function updateHealthUI() {
 
 function updateCamera() {
 
-    if (currentVehicle) {
+    if (
+        currentVehicle
+    ) {
 
         camera.position.x =
             currentVehicle.group.position.x;
@@ -691,22 +1023,34 @@ function animate() {
         animate
     );
 
-    if (!currentVehicle) {
+    if (
+        !currentVehicle
+    ) {
 
-        player.update(
-            keys
-        );
+        player.update(keys);
     }
 
+    updateBase();
+
     updateNPCJobs();
+
     updateNPCs();
+
     updateVehicles();
+
     updateSkyblade();
+
     updateShadowKing();
+
     updateMission();
+
     updateIdentityUI();
+
     updateHealthUI();
+
     updateCamera();
+
+    updateMinimap();
 
     renderer.render(
         scene,
@@ -714,10 +1058,14 @@ function animate() {
     );
 }
 
+// ======================================
+// START GAME
+// ======================================
+
 animate();
 
 // ======================================
-// RESIZE
+// WINDOW RESIZE
 // ======================================
 
 window.addEventListener(
