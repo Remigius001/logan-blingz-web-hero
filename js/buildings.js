@@ -1,99 +1,235 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
+export const buildingList = [];
+
 export function createBuildings(scene) {
 
-    const buildingMaterials = [
-        new THREE.MeshStandardMaterial({ color: 0xb0b0b0 }),
-        new THREE.MeshStandardMaterial({ color: 0xcccccc }),
-        new THREE.MeshStandardMaterial({ color: 0x999999 }),
-        new THREE.MeshStandardMaterial({ color: 0xd0c0a0 }),
-        new THREE.MeshStandardMaterial({ color: 0x8fb3c9 })
+    const materials = [
+        0xb8b8b8,
+        0x9fa8b2,
+        0xc7b89b,
+        0x8fa6b8,
+        0xd0d0d0,
+        0xa68b72
     ];
 
-    for (let x = -80; x <= 80; x += 25) {
+    let id = 0;
 
-        for (let z = -80; z <= 80; z += 25) {
+    for (let x = -180; x <= 180; x += 30) {
 
-            // Keep the roads clear
+        for (let z = -180; z <= 180; z += 30) {
 
+            // Large streets stay clear
             if (
-                Math.abs(x) < 15 ||
-                Math.abs(z) < 15
+                Math.abs(x) < 18 ||
+                Math.abs(z) < 18
             ) {
                 continue;
             }
 
-            const height =
-                10 + Math.random() * 30;
+            const width = 18;
+            const depth = 18;
+            const height = 12 + Math.random() * 35;
 
-            const width =
-                10 + Math.random() * 6;
-
-            const material =
-                buildingMaterials[
+            const color =
+                materials[
                     Math.floor(
-                        Math.random() *
-                        buildingMaterials.length
+                        Math.random() * materials.length
                     )
                 ];
 
+            const wallMaterial =
+                new THREE.MeshStandardMaterial({
+                    color
+                });
+
+            const floorMaterial =
+                new THREE.MeshStandardMaterial({
+                    color: 0x505050
+                });
+
             const building =
-                new THREE.Mesh(
-                    new THREE.BoxGeometry(
-                        width,
-                        height,
-                        width
-                    ),
-                    material
-                );
+                new THREE.Group();
 
             building.position.set(
                 x,
-                height / 2,
+                0,
                 z
+            );
+
+            // =================================
+            // FLOOR / INTERIOR
+            // =================================
+
+            const floor = new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    width,
+                    0.3,
+                    depth
+                ),
+                floorMaterial
+            );
+
+            floor.position.y = 0.15;
+
+            building.add(floor);
+
+            // =================================
+            // BACK WALL
+            // =================================
+
+            const backWall = new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    width,
+                    height,
+                    0.8
+                ),
+                wallMaterial
+            );
+
+            backWall.position.set(
+                0,
+                height / 2,
+                depth / 2
+            );
+
+            building.add(backWall);
+
+            // =================================
+            // LEFT WALL
+            // =================================
+
+            const leftWall = new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    0.8,
+                    height,
+                    depth
+                ),
+                wallMaterial
+            );
+
+            leftWall.position.set(
+                -width / 2,
+                height / 2,
+                0
+            );
+
+            building.add(leftWall);
+
+            // =================================
+            // RIGHT WALL
+            // =================================
+
+            const rightWall = new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    0.8,
+                    height,
+                    depth
+                ),
+                wallMaterial
+            );
+
+            rightWall.position.set(
+                width / 2,
+                height / 2,
+                0
+            );
+
+            building.add(rightWall);
+
+            // =================================
+            // FRONT WALL WITH DOOR GAP
+            // =================================
+
+            const frontSideWidth =
+                (width - 4) / 2;
+
+            const frontLeft = new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    frontSideWidth,
+                    height,
+                    0.8
+                ),
+                wallMaterial
+            );
+
+            frontLeft.position.set(
+                -(width - 4) / 4,
+                height / 2,
+                -depth / 2
+            );
+
+            building.add(frontLeft);
+
+            const frontRight = frontLeft.clone();
+
+            frontRight.position.x =
+                (width - 4) / 4;
+
+            building.add(frontRight);
+
+            // =================================
+            // DOOR
+            // =================================
+
+            const door = new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    4,
+                    5,
+                    0.25
+                ),
+                new THREE.MeshStandardMaterial({
+                    color: 0x4b2e1f
+                })
+            );
+
+            door.position.set(
+                0,
+                2.5,
+                -depth / 2 - 0.1
+            );
+
+            building.add(door);
+
+            // =================================
+            // INTERIOR LIGHT
+            // =================================
+
+            const light = new THREE.PointLight(
+                0xffffcc,
+                1.5,
+                35
+            );
+
+            light.position.set(
+                0,
+                Math.min(height - 2, 10),
+                0
+            );
+
+            building.add(light);
+
+            // =================================
+            // NAME / DATA
+            // =================================
+
+            building.userData = {
+                id,
+                name: `Building ${id + 1}`,
+                x,
+                z,
+                width,
+                depth,
+                height
+            };
+
+            buildingList.push(
+                building.userData
             );
 
             scene.add(building);
 
-            // ==========================
-            // WINDOWS
-            // ==========================
-
-            const windowMaterial =
-                new THREE.MeshBasicMaterial({
-                    color: 0xffff99
-                });
-
-            for (
-                let y = 4;
-                y < height - 2;
-                y += 4
-            ) {
-
-                for (
-                    let side = -1;
-                    side <= 1;
-                    side += 2
-                ) {
-
-                    const window = new THREE.Mesh(
-                        new THREE.BoxGeometry(
-                            1.2,
-                            1.5,
-                            0.1
-                        ),
-                        windowMaterial
-                    );
-
-                    window.position.set(
-                        x + side * (width / 2 + 0.06),
-                        y,
-                        z
-                    );
-
-                    scene.add(window);
-                }
-            }
+            id++;
         }
     }
 }
