@@ -3,12 +3,20 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>LOGAN BLINGZ</title>
 
-    <link rel="stylesheet" href="./style.css">
+    <link
+        rel="stylesheet"
+        href="./style.css"
+    >
 
+    <!-- Three.js import map -->
     <script type="importmap">
     {
         "imports": {
@@ -20,11 +28,49 @@
 
 <body>
 
+    <!-- GAME TITLE -->
+
     <div id="title">
         LOGAN BLINGZ
     </div>
 
-    <script type="module" src="./js/game.js"></script>
+
+    <!-- HEALTH DISPLAY -->
+
+    <div id="health">
+        Logan Health: 100
+    </div>
+
+    <div id="hero-health">
+        Skyblade Health: 100
+    </div>
+
+    <div id="villain-health">
+        Shadow King Health: 120
+    </div>
+
+
+    <!-- CONTROLS -->
+
+    <div id="controls">
+
+        <div>W A S D — Move</div>
+        <div>SHIFT — Run</div>
+        <div>SPACE — Jump</div>
+        <div>E — Enter / Exit Vehicle</div>
+        <div>M — Start Mission</div>
+        <div>F — Logan Attack</div>
+        <div>G — Skyblade Attack</div>
+
+    </div>
+
+
+    <!-- GAME -->
+
+    <script
+        type="module"
+        src="./js/game.js"
+    ></script>
 
 </body>
 
