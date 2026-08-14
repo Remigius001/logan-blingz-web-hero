@@ -1,4 +1,5 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+import { buildingList } from "./buildings.js";
 
 const names = [
     "Daniel",
@@ -12,23 +13,15 @@ const names = [
     "Noah",
     "Mia",
     "Ethan",
-    "Grace"
-];
-
-const skinColors = [
-    0xffc79c,
-    0xd99b72,
-    0x8d5524,
-    0x6b3e26
-];
-
-const shirtColors = [
-    0x3366ff,
-    0xff4444,
-    0x22aa66,
-    0xffaa22,
-    0xaa44cc,
-    0xeeeeee
+    "Grace",
+    "Lucas",
+    "Ava",
+    "Mason",
+    "Lily",
+    "Ethan",
+    "Chloe",
+    "Leo",
+    "Amelia"
 ];
 
 export function createNPCs(scene) {
@@ -39,105 +32,100 @@ export function createNPCs(scene) {
 
         const npc = new THREE.Group();
 
-        // ==================================
+        // =================================
         // BODY
-        // ==================================
+        // =================================
 
         const body = new THREE.Mesh(
             new THREE.CapsuleGeometry(
                 0.35,
-                0.9,
+                0.8,
                 8,
                 16
             ),
             new THREE.MeshStandardMaterial({
                 color:
-                    shirtColors[
-                        Math.floor(
-                            Math.random() *
-                            shirtColors.length
-                        )
-                    ]
+                    0x3366ff +
+                    Math.floor(
+                        Math.random() * 0x444444
+                    )
             })
         );
 
-        body.position.y = 1.35;
+        body.position.y = 1.3;
 
         npc.add(body);
 
-        // ==================================
+        // =================================
         // HEAD
-        // ==================================
+        // =================================
 
         const head = new THREE.Mesh(
             new THREE.SphereGeometry(
                 0.38,
-                24,
-                24
+                20,
+                20
             ),
             new THREE.MeshStandardMaterial({
-                color:
-                    skinColors[
-                        Math.floor(
-                            Math.random() *
-                            skinColors.length
-                        )
-                    ]
+                color: 0xffc79c
             })
         );
 
-        head.position.y = 2.35;
+        head.position.y = 2.3;
 
         npc.add(head);
 
-        // ==================================
-        // LEFT ARM
-        // ==================================
+        // =================================
+        // ARMS
+        // =================================
+
+        const armMaterial =
+            new THREE.MeshStandardMaterial({
+                color: 0xdddddd
+            });
 
         const leftArm = new THREE.Mesh(
             new THREE.CapsuleGeometry(
-                0.12,
+                0.11,
                 0.65,
                 6,
                 12
             ),
-            new THREE.MeshStandardMaterial({
-                color: 0xeeeeee
-            })
+            armMaterial
         );
 
         leftArm.position.set(
-            -0.5,
-            1.4,
+            -0.48,
+            1.35,
             0
         );
 
         npc.add(leftArm);
 
-        // ==================================
-        // RIGHT ARM
-        // ==================================
+        const rightArm =
+            leftArm.clone();
 
-        const rightArm = leftArm.clone();
-
-        rightArm.position.x = 0.5;
+        rightArm.position.x = 0.48;
 
         npc.add(rightArm);
 
-        // ==================================
-        // LEFT LEG
-        // ==================================
+        // =================================
+        // LEGS
+        // =================================
+
+        const legMaterial =
+            new THREE.MeshStandardMaterial({
+                color: 0x222222
+            });
 
         const leftLeg = new THREE.Mesh(
             new THREE.CapsuleGeometry(
-                0.14,
-                0.65,
+                0.13,
+                0.6,
                 6,
                 12
             ),
-            new THREE.MeshStandardMaterial({
-                color: 0x222222
-            })
+            legMaterial
         );
 
         leftLeg.position.set(
@@ -148,42 +136,59 @@ export function createNPCs(scene) {
 
         npc.add(leftLeg);
 
-        // ==================================
-        // RIGHT LEG
-        // ==================================
-
-        const rightLeg = leftLeg.clone();
+        const rightLeg =
+            leftLeg.clone();
 
         rightLeg.position.x = 0.2;
 
         npc.add(rightLeg);
 
-        // ==================================
+        // =================================
         // POSITION
-        // ==================================
+        // =================================
 
         npc.position.set(
-            (Math.random() - 0.5) * 120,
+            (Math.random() - 0.5) * 420,
             0,
-            (Math.random() - 0.5) * 120
+            (Math.random() - 0.5) * 420
         );
 
         scene.add(npc);
 
-        // ==================================
-        // NPC DATA
-        // ==================================
+        // Pick building
+        const targetBuilding =
+            buildingList.length > 0
+                ? buildingList[
+                    Math.floor(
+                        Math.random() *
+                        buildingList.length
+                    )
+                ]
+                : null;
 
         npcs.push({
+
             object: npc,
+
             name: names[i],
+
             direction:
                 Math.random() *
                 Math.PI *
                 2,
+
             speed:
-                0.01 +
-                Math.random() * 0.02
+                0.02 +
+                Math.random() *
+                0.02,
+
+            state: "walking",
+
+            targetBuilding,
+
+            insideTimer: 0,
+
+            reactionTimer: 0
         });
     }
 
