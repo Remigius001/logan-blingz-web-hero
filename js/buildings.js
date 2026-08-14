@@ -13,223 +13,226 @@ export function createBuildings(scene) {
         0xa68b72
     ];
 
-    let id = 0;
+    const cities = [
+        {
+            centerX: 0,
+            centerZ: 0,
+            name: "Blingz City"
+        },
+        {
+            centerX: 350,
+            centerZ: 0,
+            name: "Central City"
+        }
+    ];
 
-    for (let x = -180; x <= 180; x += 30) {
+    let buildingId = 0;
 
-        for (let z = -180; z <= 180; z += 30) {
+    for (const city of cities) {
 
-            // Large streets stay clear
-            if (
-                Math.abs(x) < 18 ||
-                Math.abs(z) < 18
+        for (
+            let x = -100;
+            x <= 100;
+            x += 50
+        ) {
+
+            for (
+                let z = -100;
+                z <= 100;
+                z += 50
             ) {
-                continue;
-            }
 
-            const width = 18;
-            const depth = 18;
-            const height = 12 + Math.random() * 35;
+                const worldX =
+                    city.centerX + x;
 
-            const color =
-                materials[
-                    Math.floor(
-                        Math.random() * materials.length
-                    )
+                const worldZ =
+                    city.centerZ + z;
+
+                // Keep the highway and major roads open
+                if (
+                    Math.abs(x) < 18 ||
+                    Math.abs(z) < 18
+                ) {
+                    continue;
+                }
+
+                const width = 18;
+                const depth = 18;
+                const height =
+                    12 +
+                    Math.random() * 35;
+
+                const material =
+                    new THREE.MeshStandardMaterial({
+                        color:
+                            materials[
+                                Math.floor(
+                                    Math.random() *
+                                    materials.length
+                                )
+                            ]
+                    });
+
+                const building =
+                    new THREE.Group();
+
+                building.position.set(
+                    worldX,
+                    0,
+                    worldZ
+                );
+
+                // FLOOR
+                const floor = new THREE.Mesh(
+                    new THREE.BoxGeometry(
+                        width,
+                        0.3,
+                        depth
+                    ),
+                    new THREE.MeshStandardMaterial({
+                        color: 0x555555
+                    })
+                );
+
+                floor.position.y = 0.15;
+                building.add(floor);
+
+                // BACK
+                const back = new THREE.Mesh(
+                    new THREE.BoxGeometry(
+                        width,
+                        height,
+                        0.8
+                    ),
+                    material
+                );
+
+                back.position.set(
+                    0,
+                    height / 2,
+                    depth / 2
+                );
+
+                building.add(back);
+
+                // LEFT
+                const left = new THREE.Mesh(
+                    new THREE.BoxGeometry(
+                        0.8,
+                        height,
+                        depth
+                    ),
+                    material
+                );
+
+                left.position.set(
+                    -width / 2,
+                    height / 2,
+                    0
+                );
+
+                building.add(left);
+
+                // RIGHT
+                const right = left.clone();
+
+                right.position.x =
+                    width / 2;
+
+                building.add(right);
+
+                // FRONT LEFT
+                const frontLeft =
+                    new THREE.Mesh(
+                        new THREE.BoxGeometry(
+                            (width - 4) / 2,
+                            height,
+                            0.8
+                        ),
+                        material
+                    );
+
+                frontLeft.position.set(
+                    -5,
+                    height / 2,
+                    -depth / 2
+                );
+
+                building.add(frontLeft);
+
+                // FRONT RIGHT
+                const frontRight =
+                    frontLeft.clone();
+
+                frontRight.position.x = 5;
+
+                building.add(frontRight);
+
+                // DOOR
+                const door =
+                    new THREE.Mesh(
+                        new THREE.BoxGeometry(
+                            4,
+                            5,
+                            0.25
+                        ),
+                        new THREE.MeshStandardMaterial({
+                            color: 0x4b2e1f
+                        })
+                    );
+
+                door.position.set(
+                    0,
+                    2.5,
+                    -depth / 2 - 0.1
+                );
+
+                building.add(door);
+
+                // WORKPLACE TYPE
+                const jobTypes = [
+                    "Teacher",
+                    "Doctor",
+                    "Police Officer",
+                    "Shop Worker",
+                    "Mechanic",
+                    "Engineer",
+                    "Taxi Driver"
                 ];
 
-            const wallMaterial =
-                new THREE.MeshStandardMaterial({
-                    color
-                });
+                const workplace =
+                    jobTypes[
+                        buildingId %
+                        jobTypes.length
+                    ];
 
-            const floorMaterial =
-                new THREE.MeshStandardMaterial({
-                    color: 0x505050
-                });
+                building.userData = {
 
-            const building =
-                new THREE.Group();
+                    id: buildingId,
 
-            building.position.set(
-                x,
-                0,
-                z
-            );
+                    city: city.name,
 
-            // =================================
-            // FLOOR / INTERIOR
-            // =================================
+                    x: worldX,
 
-            const floor = new THREE.Mesh(
-                new THREE.BoxGeometry(
+                    z: worldZ,
+
                     width,
-                    0.3,
-                    depth
-                ),
-                floorMaterial
-            );
 
-            floor.position.y = 0.15;
+                    depth,
 
-            building.add(floor);
-
-            // =================================
-            // BACK WALL
-            // =================================
-
-            const backWall = new THREE.Mesh(
-                new THREE.BoxGeometry(
-                    width,
                     height,
-                    0.8
-                ),
-                wallMaterial
-            );
 
-            backWall.position.set(
-                0,
-                height / 2,
-                depth / 2
-            );
+                    workplace
+                };
 
-            building.add(backWall);
+                buildingList.push(
+                    building.userData
+                );
 
-            // =================================
-            // LEFT WALL
-            // =================================
+                scene.add(building);
 
-            const leftWall = new THREE.Mesh(
-                new THREE.BoxGeometry(
-                    0.8,
-                    height,
-                    depth
-                ),
-                wallMaterial
-            );
-
-            leftWall.position.set(
-                -width / 2,
-                height / 2,
-                0
-            );
-
-            building.add(leftWall);
-
-            // =================================
-            // RIGHT WALL
-            // =================================
-
-            const rightWall = new THREE.Mesh(
-                new THREE.BoxGeometry(
-                    0.8,
-                    height,
-                    depth
-                ),
-                wallMaterial
-            );
-
-            rightWall.position.set(
-                width / 2,
-                height / 2,
-                0
-            );
-
-            building.add(rightWall);
-
-            // =================================
-            // FRONT WALL WITH DOOR GAP
-            // =================================
-
-            const frontSideWidth =
-                (width - 4) / 2;
-
-            const frontLeft = new THREE.Mesh(
-                new THREE.BoxGeometry(
-                    frontSideWidth,
-                    height,
-                    0.8
-                ),
-                wallMaterial
-            );
-
-            frontLeft.position.set(
-                -(width - 4) / 4,
-                height / 2,
-                -depth / 2
-            );
-
-            building.add(frontLeft);
-
-            const frontRight = frontLeft.clone();
-
-            frontRight.position.x =
-                (width - 4) / 4;
-
-            building.add(frontRight);
-
-            // =================================
-            // DOOR
-            // =================================
-
-            const door = new THREE.Mesh(
-                new THREE.BoxGeometry(
-                    4,
-                    5,
-                    0.25
-                ),
-                new THREE.MeshStandardMaterial({
-                    color: 0x4b2e1f
-                })
-            );
-
-            door.position.set(
-                0,
-                2.5,
-                -depth / 2 - 0.1
-            );
-
-            building.add(door);
-
-            // =================================
-            // INTERIOR LIGHT
-            // =================================
-
-            const light = new THREE.PointLight(
-                0xffffcc,
-                1.5,
-                35
-            );
-
-            light.position.set(
-                0,
-                Math.min(height - 2, 10),
-                0
-            );
-
-            building.add(light);
-
-            // =================================
-            // NAME / DATA
-            // =================================
-
-            building.userData = {
-                id,
-                name: `Building ${id + 1}`,
-                x,
-                z,
-                width,
-                depth,
-                height
-            };
-
-            buildingList.push(
-                building.userData
-            );
-
-            scene.add(building);
-
-            id++;
+                buildingId++;
+            }
         }
     }
 }
