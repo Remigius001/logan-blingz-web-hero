@@ -14,7 +14,8 @@ body {
         Helvetica,
         sans-serif;
 
-    background: #87ceeb;
+    background:
+        #87ceeb;
 }
 
 #gameCanvas {
@@ -56,7 +57,8 @@ body {
 #health,
 #hero-health,
 #villain-health,
-#identity {
+#identity,
+#mission {
 
     position: fixed;
 
@@ -116,6 +118,15 @@ body {
     top: 235px;
 }
 
+#mission {
+
+    top: 285px;
+
+    max-width: 380px;
+
+    line-height: 1.4;
+}
+
 /* =====================================
    MINIMAP
    ===================================== */
@@ -171,7 +182,7 @@ body {
 }
 
 /* =====================================
-   SKYBLADE CALL
+   HERO CALL
    ===================================== */
 
 #skyblade-call {
@@ -179,7 +190,6 @@ body {
     position: fixed;
 
     left: 50%;
-
     bottom: 30px;
 
     transform:
@@ -281,7 +291,7 @@ body {
 }
 
 /* =====================================
-   SMALL SCREENS
+   SMALL SCREEN
    ===================================== */
 
 @media (max-width: 700px) {
@@ -296,13 +306,14 @@ body {
     #health,
     #hero-health,
     #villain-health,
-    #identity {
+    #identity,
+    #mission {
 
         left: 10px;
 
         min-width: 170px;
 
-        font-size: 14px;
+        font-size: 13px;
 
         padding:
             8px 10px;
@@ -322,6 +333,11 @@ body {
 
     #identity {
         top: 194px;
+    }
+
+    #mission {
+        top: 237px;
+        max-width: 230px;
     }
 
     #minimap-container {
